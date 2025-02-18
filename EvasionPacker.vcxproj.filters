@@ -30,6 +30,9 @@
     <ClCompile Include="Function.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="AntiVm.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Tools.h">
@@ -60,6 +63,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="util.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AntiVm.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

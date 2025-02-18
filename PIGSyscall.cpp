@@ -95,6 +95,8 @@ void pigsyscall::syscall::ExtractSSNs() noexcept {
 
 	int ssn = 0;
 
+
+
 	for (size_t i = 0; i < runtimefunctable[i].BeginAddress; i++)
 	{
 		for (size_t j = 0; j < export_dir->NumberOfFunctions; j++)
@@ -151,7 +153,8 @@ uintptr_t pigsyscall::syscall::FindSyscallOffset() noexcept {
 	const auto syscall_entry = syscall_map.find(function_name_hashed);
 
 	if (syscall_entry == syscall_map.end()) {
-		throw std::runtime_error(utils::FormatString("[pigsyscall::Syscall::GetSyscallNumber] Function \"%s\" not found!", function_name_hashed));
+		// throw std::runtime_error(utils::FormatString("[pigsyscall::Syscall::GetSyscallNumber] Function \"%s\" not found!", function_name_hashed));
+		throw std::runtime_error("can't find ssn");
 	}
 
 	return syscall_entry->second;

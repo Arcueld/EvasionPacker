@@ -36,16 +36,16 @@ namespace pigsyscall {
 
 		uintptr_t FindSyscallOffset() noexcept;
 
-		template<typename... ServiceArgs>
-		NtStatus InternalCaller(uint32_t syscall_no, uintptr_t stub_addr, ServiceArgs... args) noexcept {
-			using StubDef = NtStatus(__stdcall*)(uint32_t, ServiceArgs...);
+		template<typename Ret,typename... ServiceArgs>
+		Ret InternalCaller(uint32_t syscall_no, uintptr_t stub_addr, ServiceArgs... args) noexcept {
+			using StubDef = Ret(__stdcall*)(uint32_t, ServiceArgs...);
 			StubDef stub = reinterpret_cast<decltype(stub)>(stub_addr);
 			//decrypt stub
 			//strlen maybe not beauty?
 			if (((char*)stub_addr)[0] != 0x41) {
 				pigsyscall::utils::CryptPermute((PVOID)stub_addr, strlen((char*)stub_addr), FALSE);
 			}
-			NtStatus return_value = stub(syscall_no, std::forward<ServiceArgs>(args)...);   //完美转发，是指std::forward会将输入的参数原封不动地传递到下一个函数中
+			Ret return_value = stub(syscall_no, std::forward<ServiceArgs>(args)...);   //完美转发，是指std::forward会将输入的参数原封不动地传递到下一个函数中
 
 			return return_value;
 		}
@@ -67,21 +67,23 @@ namespace pigsyscall {
 
 		[[nodiscard]] uint32_t GetSyscallNumber(uint32_t stub_name_hashed);
 
-		template<typename... ServiceArgs>
-		NtStatus CallSyscall(uint32_t stub_name_hashed, ServiceArgs... args) {
+		template<typename Ret,typename... ServiceArgs>
+		Ret CallSyscall(uint32_t stub_name_hashed, ServiceArgs... args) {
 			uint32_t syscall_no;
 			uintptr_t syscall_inst_addr;
 
 			syscall_no = GetSyscallNumber(stub_name_hashed);
 			syscall_inst_addr = FindSyscallOffset();
-
+			if (!syscall_no) {
+				throw std::runtime_error("can't find ssn, try loadlib");
+			}
 			// If the syscall instruction has not been found, use the direct stub. To use the masked stub
 			// we need the instruction to be in the original stub.
 			if (!syscall_inst_addr) {
-				return InternalCaller(syscall_no, reinterpret_cast<uintptr_t>(&encrypted_manual_syscall_stub), std::forward<ServiceArgs>(args)...);
+				return InternalCaller<Ret>(syscall_no, reinterpret_cast<uintptr_t>(&encrypted_manual_syscall_stub), std::forward<ServiceArgs>(args)...);
 			}
 
-			return InternalCaller(syscall_no, reinterpret_cast<uintptr_t>(&encrypted_masked_syscall_stub), syscall_inst_addr, std::forward<ServiceArgs>(args)...);
+			return InternalCaller<Ret>(syscall_no, reinterpret_cast<uintptr_t>(&encrypted_masked_syscall_stub), syscall_inst_addr, std::forward<ServiceArgs>(args)...);
 		}
 	};
 }// namespace pigsyscall

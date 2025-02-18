@@ -1,20 +1,38 @@
 # 架构
 
+C++17
+
 ## C/CPP
 
 最终exe或dll的生成 负责主体逻辑
 
+### config
+
+全局变量 后续通过python替换来达到参数控制的效果
+
 ### 隐藏框体
+
+loader默认隐藏框体
 
 ### 分配内存
 
 ### syscall
 
-全局变量
+使用项目[PigSyscall](https://github.com/evilashz/PigSyscall)
 
 ### unhook
 
 ### 执行方式
+
+#### 回调
+
+通过枚举选择具体回调函数
+
+#### APC
+
+
+
+
 
 ### 反沙箱
 
@@ -40,4 +58,7 @@ UI
 
 
 
-## 
+### 签名伪造
+
+sigthief
+

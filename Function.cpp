@@ -53,18 +53,63 @@ HMODULE GetMoudlebyName(WCHAR* target) {
 
 
 
+HMODULE Ntdll = GetMoudlebyName(_wcsdup(L"ntdll.dll"));
+HMODULE Kernel32 = GetMoudlebyName(_wcsdup(L"Kernel32.dll"));
 
+typedef HMODULE (WINAPI* pLoadLibraryW)(
+	_In_ LPCWSTR lpLibFileName
+);
 
+HMODULE myLoadLibrary(LPCWSTR moduleName) {
+	static pLoadLibraryW LoadLibraryWRoutine;
+	if (!LoadLibraryWRoutine) {
+		LoadLibraryWRoutine = (pLoadLibraryW)GetProcAddressbyHASH(Kernel32, LoadLibraryW_Hashed);
+	}
+	if (LoadLibraryWRoutine) {
+		return LoadLibraryWRoutine(moduleName);
+	}
+	return NULL;
+}
 
 // ======================== Function INIT =================================
 FunctionStruct NtAllocateVirtualMemoryStruct = { 0 };
 FunctionStruct NtProtectVirtualMemoryStruct = { 0 };
+FunctionStruct NtFreeVirtualMemoryStruct = { 0 };
+FunctionStruct NtQueryVirtualMemoryStruct = { 0 };
+FunctionStruct ZwQueryLicenseValueStruct = { 0 };
+FunctionStruct ZwQuerySystemInformationStruct = { 0 };
+FunctionStruct RtlExitUserProcessStruct = { 0 };
+FunctionStruct RtlInitUnicodeStringStruct = { 0 };
+FunctionStruct RtlImageDirectoryEntryToDataStruct = { 0 };
+FunctionStruct LdrGetDllHandleExStruct = { 0 };
+FunctionStruct NtIsProcessInJobStruct = { 0 };
+FunctionStruct NtCompressKeyStruct = { 0 };
 
 void initAllFunc() {
-	NtAllocateVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(GetMoudlebyName(_wcsdup(L"ntdll.dll")), NtAllocateVirtualMemory_Hashed);
+	NtAllocateVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntdll, NtAllocateVirtualMemory_Hashed);
 	NtAllocateVirtualMemoryStruct.funcHash = NtAllocateVirtualMemory_Hashed;
-	NtProtectVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(GetMoudlebyName(_wcsdup(L"ntdll.dll")), NtProtectVirtualMemory_Hashed);
+	NtProtectVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntdll, NtProtectVirtualMemory_Hashed);
 	NtProtectVirtualMemoryStruct.funcHash = NtProtectVirtualMemory_Hashed;
+	NtFreeVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntdll, NtFreeVirtualMemory_Hashed);
+	NtFreeVirtualMemoryStruct.funcHash = NtFreeVirtualMemory_Hashed;
+	NtQueryVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntdll, NtQueryVirtualMemory_Hashed);
+	NtQueryVirtualMemoryStruct.funcHash = NtQueryVirtualMemory_Hashed;
+	ZwQueryLicenseValueStruct.funcAddr = GetProcAddressbyHASH(Ntdll, ZwQueryLicenseValue_Hashed);
+	ZwQueryLicenseValueStruct.funcHash = ZwQueryLicenseValue_Hashed;
+	ZwQuerySystemInformationStruct.funcAddr = GetProcAddressbyHASH(Ntdll, ZwQuerySystemInformation_Hashed);
+	ZwQuerySystemInformationStruct.funcHash = ZwQuerySystemInformation_Hashed;
+	RtlExitUserProcessStruct.funcAddr = GetProcAddressbyHASH(Ntdll, RtlExitUserProcess_Hashed);
+	RtlExitUserProcessStruct.funcHash = RtlExitUserProcess_Hashed;
+	RtlInitUnicodeStringStruct.funcAddr = GetProcAddressbyHASH(Ntdll, RtlInitUnicodeString_Hashed);
+	RtlInitUnicodeStringStruct.funcHash = RtlInitUnicodeString_Hashed;
+	RtlImageDirectoryEntryToDataStruct.funcAddr = GetProcAddressbyHASH(Ntdll, RtlImageDirectoryEntryToData_Hashed);
+	RtlImageDirectoryEntryToDataStruct.funcHash = RtlImageDirectoryEntryToData_Hashed;
+	LdrGetDllHandleExStruct.funcAddr = GetProcAddressbyHASH(Ntdll, LdrGetDllHandleEx_Hashed);
+	LdrGetDllHandleExStruct.funcHash = LdrGetDllHandleEx_Hashed;
+	NtIsProcessInJobStruct.funcAddr = GetProcAddressbyHASH(Ntdll, NtIsProcessInJob_Hashed);
+	NtIsProcessInJobStruct.funcHash = NtIsProcessInJob_Hashed;
+	NtCompressKeyStruct.funcAddr = GetProcAddressbyHASH(Ntdll, NtCompressKey_Hashed);
+	NtCompressKeyStruct.funcHash = NtCompressKey_Hashed;
 }
 
 // ======================== Function INIT END =================================
