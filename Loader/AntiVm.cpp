@@ -81,7 +81,7 @@ BOOLEAN checkTotalDiskSize()
     DWORD lpBytes;
 
     // 打开物理磁盘
-    hDrive = CreateFileA("\\\\.\\PhysicalDrive0", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    hDrive = CreateFileA(ENCRYPT_STR("\\\\.\\PhysicalDrive0"), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 
     // 获取磁盘大小信息
     BOOLEAN result = DeviceIoControl(hDrive, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0, &size, sizeof(GET_LENGTH_INFORMATION), &lpBytes, NULL);
@@ -91,150 +91,6 @@ BOOLEAN checkTotalDiskSize()
     return (size.Length.QuadPart / 1073741824) < disk;
 }
 
-BOOLEAN checkProcess()
-{
-    // 使用 std::vector 来存储进程名
-    std::vector<std::string> list = { "VBoxService.exe", "VBoxTray.exe", "vmware.exe", "vmtoolsd.exe","qemu","fiddler","process explorer","ida","olldbg","x64dbg","x32dbg","Detonate" };    PROCESSENTRY32 pe32;
-    pe32.dwSize = sizeof(pe32);
-
-    // 创建进程快照
-    HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-
-
-    BOOLEAN bResult = Process32First(hProcessSnap, &pe32);
-    while (bResult) {
-        char sz_Name[MAX_PATH] = { 0 };
-
-        WideCharToMultiByte(CP_ACP, 0, pe32.szExeFile, -1, sz_Name, sizeof(sz_Name), NULL, NULL);
-
-        for (size_t i = 0; i < list.size(); ++i) {
-            if (strcmp(sz_Name, list[i].c_str()) == 0) {
-                CloseHandle(hProcessSnap);
-                return TRUE;
-            }
-        }
-        bResult = Process32Next(hProcessSnap, &pe32);
-    }
-
-    CloseHandle(hProcessSnap);
-    return FALSE;
-}
-
-BOOLEAN ManageWMIInfo(std::string& result, const std::string& table, const std::wstring& wcol)
-{
-    HRESULT hres = CoInitializeEx(0, COINIT_MULTITHREADED);
-    if (FAILED(hres)) {
-        return FALSE; // 初始化 COM 库失败
-    }
-
-    IWbemLocator* pLoc = NULL;
-    hres = CoCreateInstance(CLSID_WbemLocator, NULL, CLSCTX_INPROC_SERVER, IID_IWbemLocator, (LPVOID*)&pLoc);
-    if (FAILED(hres)) {
-        CoUninitialize();
-        return FALSE; // 创建 WMI Locator 实例失败
-    }
-
-    IWbemServices* pSvc = NULL;
-    hres = pLoc->ConnectServer(
-        _bstr_t(L"ROOT\\CIMV2"),  // WMI 命名空间
-        NULL,  // 用户名，NULL 表示当前用户
-        NULL,  // 用户密码，NULL 表示当前密码
-        0,     // 本地化
-        NULL,  // 安全标志
-        0,     // 权限
-        0,     // 上下文对象
-        &pSvc  // 返回的 IWbemServices 接口
-    );
-    pLoc->Release();
-    if (FAILED(hres)) {
-        CoUninitialize();
-        return FALSE; // 连接 WMI 服务器失败
-    }
-
-    // 设置代理空白标记
-    hres = CoSetProxyBlanket(
-        pSvc,
-        RPC_C_AUTHN_WINNT,
-        RPC_C_AUTHZ_NONE,
-        NULL,
-        RPC_C_AUTHN_LEVEL_CALL,
-        RPC_C_IMP_LEVEL_IMPERSONATE,
-        NULL,
-        EOAC_NONE
-    );
-    if (FAILED(hres)) {
-        pSvc->Release();
-        CoUninitialize();
-        return FALSE; // 设置代理失败
-    }
-
-    // 执行 WMI 查询
-    IEnumWbemClassObject* pEnumerator = NULL;
-    std::string query = "SELECT * FROM " + table;
-    hres = pSvc->ExecQuery(
-        bstr_t("WQL"),
-        bstr_t(query.c_str()),
-        WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
-        NULL,
-        &pEnumerator
-    );
-    if (FAILED(hres)) {
-        pSvc->Release();
-        CoUninitialize();
-        return FALSE; // 执行查询失败
-    }
-
-    IWbemClassObject* pclsObj;
-    ULONG uReturn = 0;
-    while (pEnumerator) {
-        HRESULT hr = pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn);
-        if (0 == uReturn) {
-            break; // 没有更多数据
-        }
-
-        VARIANT vtProp;
-        VariantInit(&vtProp);
-        hr = pclsObj->Get(wcol.c_str(), 0, &vtProp, 0, 0);
-        if (SUCCEEDED(hr)) {
-            _bstr_t bstrValue(vtProp.bstrVal);
-            result = (const char*)bstrValue; // 将获取到的 BSTR 转换为 std::string
-        }
-        VariantClear(&vtProp);
-        pclsObj->Release();
-    }
-
-    // 清理
-    pSvc->Release();
-    pEnumerator->Release();
-    CoUninitialize();
-
-    return !result.empty(); // 返回是否成功获取到结果
-}
-
-BOOLEAN checkHardwareInfo()
-{
-    // 先获取主板序列号
-    std::string ret;
-    ManageWMIInfo(ret, "Win32_BaseBoard", L"SerialNumber");
-    if (ret == "None") {
-        return TRUE; // 如果没有获取到序列号，认为是虚拟机环境
-    }
-
-    // 获取磁盘信息，检查是否包含虚拟机标志
-    ManageWMIInfo(ret, "Win32_DiskDrive", L"Caption");
-    if (ret.find("VMware") != std::string::npos || ret.find("VBOX") != std::string::npos || ret.find("Virtual HD") != std::string::npos) {
-        return TRUE; // 如果磁盘信息包含虚拟机相关关键词，则为虚拟机环境
-    }
-
-    // 获取计算机型号，检查是否包含虚拟机标志
-    ManageWMIInfo(ret, "Win32_ComputerSystem", L"Model");
-    if (ret.find("VMware") != std::string::npos || ret.find("VirtualBox") != std::string::npos || ret.find("Virtual Machine") != std::string::npos) {
-        return TRUE; // 如果计算机型号包含虚拟机相关关键词，则为虚拟机环境
-    }
-
-    // 如果所有检查都未检测到虚拟机标志，返回 FALSE
-    return FALSE;
-}
 
 BOOLEAN checkBootTime()
 {
@@ -257,7 +113,7 @@ BOOLEAN checkTempFileCount(INT reqFileCount)
     LPSTR pszOldVal = (LPSTR)malloc(MAX_PATH * sizeof(char));
 
     // 从环境变量获取 TEMP 目录路径
-    dwRet = GetEnvironmentVariableA("TEMP", pszOldVal, MAX_PATH);
+    dwRet = GetEnvironmentVariableA(ENCRYPT_STR("TEMP"), pszOldVal, MAX_PATH);
     if (dwRet == 0 || dwRet > MAX_PATH) {
         free(pszOldVal);
         return FALSE;
@@ -296,181 +152,6 @@ BOOLEAN checkTempFileCount(INT reqFileCount)
     return TRUE;
 }
 
-BOOLEAN checkCPUTemperature()
-{
-    HRESULT hres;
-    BOOLEAN res = -1;
-
-    do
-    {
-        // Step 1: --------------------------------------------------
-    // Initialize COM. ------------------------------------------
-
-        hres = CoInitializeEx(0, COINIT_MULTITHREADED);
-        if (FAILED(hres))
-        {
-            // cout << "Failed to initialize COM library. Error code = 0x" << hex << hres << endl;
-            break;                  // Program has failed.
-        }
-
-        // Step 2: --------------------------------------------------
-        // Set general COM security levels --------------------------
-
-        hres = CoInitializeSecurity(
-            NULL,
-            -1,                          // COM authentication
-            NULL,                        // Authentication services
-            NULL,                        // Reserved
-            RPC_C_AUTHN_LEVEL_DEFAULT,   // Default authentication 
-            RPC_C_IMP_LEVEL_IMPERSONATE, // Default Impersonation  
-            NULL,                        // Authentication info
-            EOAC_NONE,                   // Additional capabilities 
-            NULL                         // Reserved
-        );
-
-        if (FAILED(hres))
-        {
-            // cout << "Failed to initialize security. Error code = 0x" << hex << hres << endl;
-            CoUninitialize();
-            break;                    // Program has failed.
-        }
-
-        // Step 3: ---------------------------------------------------
-        // Obtain the initial locator to WMI -------------------------
-
-        IWbemLocator* pLoc = NULL;
-
-        hres = CoCreateInstance(
-            CLSID_WbemLocator,
-            0,
-            CLSCTX_INPROC_SERVER,
-            IID_IWbemLocator, (LPVOID*)&pLoc);
-
-        if (FAILED(hres))
-        {
-            // cout << "Failed to create IWbemLocator object." << " Err code = 0x" << hex << hres << endl;
-            CoUninitialize();
-            break;                 // Program has failed.
-        }
-
-        // Step 4: -----------------------------------------------------
-        // Connect to WMI through the IWbemLocator::ConnectServer method
-
-        IWbemServices* pSvc = NULL;
-
-        // Connect to the root\cimv2 namespace with
-        // the current user and obtain pointer pSvc
-        // to make IWbemServices calls.
-        hres = pLoc->ConnectServer(
-            // _bstr_t(L"ROOT\\CIMV2"), // Object path of WMI namespace
-            _bstr_t(L"ROOT\\WMI"),
-            NULL,                    // User name. NULL = current user
-            NULL,                    // User password. NULL = current
-            0,                       // Locale. NULL indicates current
-            NULL,                    // Security flags.
-            0,                       // Authority (for example, Kerberos)
-            0,                       // Context object 
-            &pSvc                    // pointer to IWbemServices proxy
-        );
-
-        if (FAILED(hres))
-        {
-            // cout << "Could not connect. Error code = 0x" << hex << hres << endl;
-            pLoc->Release();
-            CoUninitialize();
-            break;                // Program has failed.
-        }
-
-        // cout << "Connected to ROOT\\WMI WMI namespace" << endl;
-
-        // Step 5: --------------------------------------------------
-        // Set security levels on the proxy -------------------------
-
-        hres = CoSetProxyBlanket(
-            pSvc,                        // Indicates the proxy to set
-            RPC_C_AUTHN_WINNT,           // RPC_C_AUTHN_xxx
-            RPC_C_AUTHZ_NONE,            // RPC_C_AUTHZ_xxx
-            NULL,                        // Server principal name 
-            RPC_C_AUTHN_LEVEL_CALL,      // RPC_C_AUTHN_LEVEL_xxx 
-            RPC_C_IMP_LEVEL_IMPERSONATE, // RPC_C_IMP_LEVEL_xxx
-            NULL,                        // client identity
-            EOAC_NONE                    // proxy capabilities 
-        );
-
-        if (FAILED(hres))
-        {
-            // cout << "Could not set proxy blanket. Error code = 0x" << hex << hres << endl;
-            pSvc->Release();
-            pLoc->Release();
-            CoUninitialize();
-            break;               // Program has failed.
-        }
-
-        // Step 6: --------------------------------------------------
-        // Use the IWbemServices pointer to make requests of WMI ----
-
-        // For example, get the name of the operating system
-        IEnumWbemClassObject* pEnumerator = NULL;
-        hres = pSvc->ExecQuery(
-            bstr_t("WQL"),
-            bstr_t("SELECT * FROM MSAcpi_ThermalZoneTemperature"),
-            WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
-            NULL,
-            &pEnumerator);
-
-        if (FAILED(hres))
-        {
-            // cout << "Query for operating system name failed." << " Error code = 0x" << hex << hres << endl;
-            pSvc->Release();
-            pLoc->Release();
-            CoUninitialize();
-            break;               // Program has failed.
-        }
-
-        // Step 7: -------------------------------------------------
-        // Get the data from the query in step 6 -------------------
-
-        IWbemClassObject* pclsObj = NULL;
-        ULONG uReturn = 0;
-
-        while (pEnumerator)
-        {
-            HRESULT hr = pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn);
-
-            if (0 == uReturn) // VM中结果为空
-            {
-                if (-1 == res)
-                {
-                    res = TRUE;
-                }
-                break;
-            }
-
-            VARIANT vtProp;
-
-            // Get the value of the Name property
-            hr = pclsObj->Get(L"CurrentTemperature", 0, &vtProp, 0, 0);
-            // res = vtProp.ullVal / 10.0 - 273.15; // 开氏转摄氏
-            //std::cout << vtProp.ullVal / 10.0 - 273.15 << std::endl;
-            res = FALSE;
-
-            VariantClear(&vtProp);
-
-            pclsObj->Release();
-        }
-
-        // Cleanup
-        // ========
-
-        pSvc->Release();
-        pLoc->Release();
-        pEnumerator->Release();
-        CoUninitialize();
-
-    } while (false);
-
-    return res;
-}
 
 BOOLEAN checkGPUMemory() {
     // 初始化设备和设备上下文
@@ -491,7 +172,7 @@ BOOLEAN checkGPUMemory() {
     );
 
     if (FAILED(hr)) {
-        std::cerr << "Failed to create D3D11 device." << std::endl;
+        std::cerr << ENCRYPT_STR("Failed to create D3D11 device.") << std::endl;
         return FALSE;
     }
 
@@ -499,7 +180,7 @@ BOOLEAN checkGPUMemory() {
     IDXGIFactory* dxgiFactory = nullptr;
     hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&dxgiFactory);
     if (FAILED(hr)) {
-        std::cerr << "Failed to create DXGI factory." << std::endl;
+        std::cerr << ENCRYPT_STR("Failed to create DXGI factory.") << std::endl;
         device->Release();
         return FALSE;
     }
@@ -539,7 +220,7 @@ BOOLEAN checkGPUMemory() {
 
 BOOLEAN checkMacAddrPrefix() {
 
-    const std::vector<std::string>& macPrefixes = { "08-00-27", "00-03-FF", "00-05-69", "00-0C-29", "00-50-56" };
+    const std::vector<std::string>& macPrefixes = { ENCRYPT_STR("08-00-27"), ENCRYPT_STR("00-03-FF"), ENCRYPT_STR("00-05-69"), ENCRYPT_STR("00-0C-29"), ENCRYPT_STR("00-50-56") };
     PIP_ADAPTER_INFO pIpAdapterInfo = nullptr;
     unsigned long stSize = sizeof(IP_ADAPTER_INFO);
     int nRel = GetAdaptersInfo(pIpAdapterInfo, &stSize);
@@ -603,110 +284,14 @@ BOOLEAN caseInsensitiveCompare(const std::string& str1, const std::string& str2)
         });
 }
 
-BOOLEAN checkUsernames() {
-    // 获取用户名
-    DWORD size = 256;
-    char username[256];
-    GetUserNameA(username, &size);
 
-    // 黑名单
-    std::vector<std::string> usernames = {
-        "CurrentUser", "Sandbox", "Emily", "HAPUBWS", "Hong Lee", "IT-ADMIN", "Johnson",
-        "Miller", "milozs", "Peter Wilson", "timmy", "user", "sand box", "malware",
-        "maltest", "test user", "virus", "John Doe", "Sangfor", "JOHN-PC"
-    };
-
-    std::string currentUsername(username);
-    // std:: cout << currentUsername << std::endl;
-    for (const auto& knownUsername : usernames) {
-        // 大小写不敏感的比较
-        if (caseInsensitiveCompare(currentUsername, knownUsername)) {
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-BOOLEAN checkNetBIOS() {
-    // 获取计算机的 NetBIOS 名称
-    CHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
-    DWORD dwSize = sizeof(szComputerName) / sizeof(szComputerName[0]);
-    GetComputerNameA(szComputerName, &dwSize);
-
-    std::string netbiosName(szComputerName);
-    if (netbiosName.empty()) {
-        return FALSE; // 获取 NetBIOS 名称失败
-    }
-
-    // 已知的 NetBIOS 名称列表（模拟的沙箱检测）
-    std::vector<std::string> netbiosNames = {
-        "SANDBOX", "7SILVIA", "HANSPETER-PC", "JOHN-PC", "MUELLER-PC", "WIN7 - TRAPS", "FORTINET","TEQUILABOOMBOOM"
-    };
-
-    // 遍历已知名称列表，进行比较
-    for (const auto& knownNetbiosName : netbiosNames) {
-        if (caseInsensitiveCompare(netbiosName, knownNetbiosName)) {
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
-
-std::wstring getParentProcessName() {
-    // 获取当前进程的进程ID
-    DWORD currentProcessId = GetCurrentProcessId();
-
-    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hSnapshot == INVALID_HANDLE_VALUE) {
-        return L"";
-    }
-
-    PROCESSENTRY32 pe32;
-    pe32.dwSize = sizeof(PROCESSENTRY32);
-
-    // 遍历进程列表
-    if (Process32First(hSnapshot, &pe32)) {
-        do {
-            // 找到当前进程的父进程
-            if (pe32.th32ProcessID == currentProcessId) {
-                DWORD parentProcessId = pe32.th32ParentProcessID;
-
-                if (Process32First(hSnapshot, &pe32)) {
-                    do {
-                        if (pe32.th32ProcessID == parentProcessId) {
-                            std::wstring parentProcessName = pe32.szExeFile;
-                            CloseHandle(hSnapshot);
-                            return parentProcessName;
-                        }
-                    } while (Process32Next(hSnapshot, &pe32));
-                }
-            }
-        } while (Process32Next(hSnapshot, &pe32));
-    }
-
-    CloseHandle(hSnapshot);
-    return L"";
-}
-
-BOOLEAN isParentRundll32() {
-    std::wstring parentProcessName = getParentProcessName();
-    if (!parentProcessName.empty()) {
-        // 判断父进程是否是 rundll32.exe
-        if (_wcsicmp(parentProcessName.c_str(), L"rundll32.exe") == 0) {
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
 
 BOOLEAN checkCurrentProcessFileName(const std::wstring& targetSubstring) {
     wchar_t path[MAX_PATH];
     // 获取当前进程的可执行文件路径
     DWORD length = GetModuleFileNameW(NULL, path, MAX_PATH);
     if (length == 0) {
-        std::wcerr << L"Failed to get executable path" << std::endl;
+        std::wcerr << ENCRYPT_WSTR("Failed to get executable path") << std::endl;
         return false;
     }
 
@@ -736,7 +321,7 @@ BOOLEAN check_run_path() {
     std::regex pattern("^C:\\\\[A-Za-z0-9_]+$");  // 只匹配一级目录
     if (std::regex_match(workingdir, pattern)) {
         // 常见的排除文件夹
-        std::vector<std::string> excludeDirs = { "Windows", "ProgramData", "Users" };
+        std::vector<std::string> excludeDirs = { ENCRYPT_STR("Windows"), ENCRYPT_STR("ProgramData"), ENCRYPT_STR("Users") };
 
         // 获取工作目录的子目录名称（C:\后面的第一个文件夹）
         size_t firstSlash = workingdir.find("\\", 3); // 从 C:\ 后开始查找
@@ -757,18 +342,18 @@ BOOLEAN check_run_path() {
 BOOLEAN checkdlls() {
     // 黑名单 DLL 列表
     std::vector<std::wstring> dlls = {
-        L"avghookx.dll",    // AVG
-        L"avghooka.dll",    // AVG
-        L"snxhk.dll",       // Avast
-        L"sbiedll.dll",     // Sandboxie
-        L"dbghelp.dll",     // WindBG
-        L"api_log.dll",     // iDefense Lab
-        L"dir_watch.dll",   // iDefense Lab
-        L"pstorec.dll",     // SunBelt Sandbox
-        L"vmcheck.dll",     // Virtual PC
-        L"wpespy.dll",      // WPE Pro
-        L"cmdvrt64.dll",    // Comodo Container
-        L"cmdvrt32.dll"     // Comodo Container
+        ENCRYPT_WSTR("avghookx.dll"),    // AVG
+        ENCRYPT_WSTR("avghooka.dll"),    // AVG
+        ENCRYPT_WSTR("snxhk.dll"),       // Avast
+        ENCRYPT_WSTR("sbiedll.dll"),     // Sandboxie
+        ENCRYPT_WSTR("dbghelp.dll"),     // WindBG
+        ENCRYPT_WSTR("api_log.dll"),     // iDefense Lab
+        ENCRYPT_WSTR("dir_watch.dll"),   // iDefense Lab
+        ENCRYPT_WSTR("pstorec.dll"),     // SunBelt Sandbox
+        ENCRYPT_WSTR("vmcheck.dll"),     // Virtual PC
+        ENCRYPT_WSTR("wpespy.dll"),      // WPE Pro
+        ENCRYPT_WSTR("cmdvrt64.dll"),    // Comodo Container
+        ENCRYPT_WSTR("cmdvrt32.dll")     // Comodo Container
     };
 
     for (const auto& dll : dlls) {
@@ -893,22 +478,14 @@ BOOLEAN accelerated_sleep()
 BOOLEAN query_license_value()
 {
 
-    // pRtlInitUnicodeString RtlInitUnicodeString = (pRtlInitUnicodeString)GetProcAddressbyHASH(GetMoudlebyName(_wcsdup(L"ntdll.dll")), RtlInitUnicodeString_Hashed);
-    // 
-    // if (RtlInitUnicodeString == nullptr)
-    //     return FALSE;
-    // 
-    // 
+
     UNICODE_STRING LicenseValue;
-    dynamicInvoker.Invoke<NTSTATUS>(RtlInitUnicodeStringStruct.funcAddr, RtlInitUnicodeStringStruct.funcHash, &LicenseValue, L"Kernel-VMDetection-Private");
-    // RtlInitUnicodeString(&LicenseValue, L"Kernel-VMDetection-Private");
+    dynamicInvoker.Invoke<NTSTATUS>(RtlInitUnicodeStringStruct.funcAddr, RtlInitUnicodeStringStruct.funcHash, &LicenseValue, ENCRYPT_WSTR("Kernel-VMDetection-Private"));
 
     ULONG Result = 0, ReturnLength;
 
     NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(ZwQueryLicenseValueStruct.funcAddr, ZwQueryLicenseValueStruct.funcHash,
         &LicenseValue, NULL, reinterpret_cast<PVOID>(&Result), sizeof(ULONG), &ReturnLength);
-
-    // NTSTATUS Status = NtQueryLicenseValue(&LicenseValue, NULL, reinterpret_cast<PVOID>(&Result), sizeof(ULONG), &ReturnLength);
 
     if (status == 0xC0000034) {
         return FALSE;
@@ -1057,12 +634,12 @@ typedef struct _RawSMBIOSData {
 const char* dmi_string(const dmi_header* dm, BYTE s) {
     const char* bp = (const char*)dm + dm->length;
 
-    if (s == 0) return "Not Specified";
+    if (s == 0) return ENCRYPT_STR("Not Specified");
     while (s > 1 && *bp) {
         bp += strlen(bp) + 1;
         s--;
     }
-    return *bp ? bp : "BAD_INDEX";
+    return *bp ? bp : ENCRYPT_STR("BAD_INDEX");
 }
 void dmi_system_uuid(const BYTE* p, short ver) {
     bool only0xFF = true, only0x00 = true;
@@ -1082,168 +659,17 @@ void dmi_system_uuid(const BYTE* p, short ver) {
     }
 
     if (ver >= 0x0206) {
-        DebugPrintA("%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X\n",
+        DebugPrintA(ENCRYPT_STR("%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X\n"),
             p[3], p[2], p[1], p[0], p[5], p[4], p[7], p[6],
             p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
     }
     else {
-        DebugPrintA("%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X\n",
+        DebugPrintA(ENCRYPT_STR("%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X\n"),
             p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7],
             p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
     }
 }
-RawSMBIOSData* get_smbios_data() {
-    DWORD bufsize = 0;
-    DWORD ret = GetSystemFirmwareTable('RSMB', 0, NULL, 0);
 
-    if (ret == 0) {
-        //  std::cerr << "Failed to get buffer size!" << std::endl;
-        return nullptr;
-    }
-
-    bufsize = ret;
-    BYTE* buffer = new BYTE[bufsize];
-
-    if (GetSystemFirmwareTable('RSMB', 0, buffer, bufsize) == 0) {
-        // std::cerr << "Failed to get SMBIOS data!" << std::endl;
-        delete[] buffer;
-        return nullptr;
-    }
-
-    return (RawSMBIOSData*)buffer;
-}
-void print_bios_info(const BYTE* p, const dmi_header* h) {
-    std::cout << "\nType " << (int)h->type << " - [BIOS]" << std::endl;
-    std::cout << "\tBIOS Vendor: " << dmi_string(h, p[0x4]) << std::endl;
-    std::cout << "\tBIOS Version: " << dmi_string(h, p[0x5]) << std::endl;
-    std::cout << "\tRelease Date: " << dmi_string(h, p[0x8]) << std::endl;
-
-    if (p[0x16] != 0xFF && p[0x17] != 0xFF) {
-        std::cout << "\tEC Version: " << (int)p[0x16] << "." << (int)p[0x17] << std::endl;
-    }
-}
-void print_system_info(const BYTE* p, const dmi_header* h, const RawSMBIOSData* Smbios) {
-    std::cout << "\nType " << (int)h->type << " - [System Information]" << std::endl;
-    std::cout << "\tManufacturer: " << dmi_string(h, p[0x4]) << std::endl;
-    std::cout << "\tProduct Name: " << dmi_string(h, p[0x5]) << std::endl;
-    std::cout << "\tVersion: " << dmi_string(h, p[0x6]) << std::endl;
-    std::cout << "\tSerial Number: " << dmi_string(h, p[0x7]) << std::endl;
-    std::cout << "\tUUID: ";
-    dmi_system_uuid(p + 0x8, Smbios->SMBIOSMajorVersion * 0x100 + Smbios->SMBIOSMinorVersion);
-    std::cout << "\tSKU Number: " << dmi_string(h, p[0x19]) << std::endl;
-    std::cout << "\tFamily: " << dmi_string(h, p[0x1a]) << std::endl;
-}
-void parse_smbios_data(const RawSMBIOSData* Smbios) {
-    if (!Smbios) {
-        std::cerr << "Invalid SMBIOS data!" << std::endl;
-        return;
-    }
-
-    const BYTE* p = Smbios->SMBIOSTableData;
-    BYTE* nonConstP = const_cast<BYTE*>(p);
-    int flag = 1;
-
-    while (p < Smbios->SMBIOSTableData + Smbios->Length) {
-        dmi_header* h = (dmi_header*)p;
-
-        if (h->type == 0 && flag) {
-            print_bios_info(p, h);
-            flag = 0;
-        }
-        else if (h->type == 1) {
-            print_system_info(p, h, Smbios);
-        }
-
-        p += h->length;
-        while (*(WORD*)p != 0) p++;
-        p += 2;
-    }
-}
-bool contains_vmware(const std::string& str) {
-    std::string lowercase_str = str;
-    std::transform(lowercase_str.begin(), lowercase_str.end(), lowercase_str.begin(), ::tolower);
-    return lowercase_str.find("vmware") != std::string::npos;
-}
-BOOLEAN check_motherboard_vmware() {
-    RawSMBIOSData* Smbios = get_smbios_data();
-    if (!Smbios) {
-        std::cerr << "Failed to retrieve SMBIOS data." << std::endl;
-        return false;
-    }
-
-    const BYTE* p = Smbios->SMBIOSTableData;
-    bool found_vmware = false;
-
-    while (p < Smbios->SMBIOSTableData + Smbios->Length) {
-        dmi_header* h = (dmi_header*)p;
-
-        if (h->type == 1) { // Type 1 for System Information
-            std::string manufacturer = dmi_string(h, p[0x4]);
-            std::string serial_number = dmi_string(h, p[0x7]);
-
-            // 检查 Manufacturer 和 Serial Number 是否包含 "VMWARE"
-            if (contains_vmware(manufacturer) || contains_vmware(serial_number)) {
-                found_vmware = true;
-                break;
-            }
-        }
-
-        p += h->length;
-        while (*(WORD*)p != 0) p++;
-        p += 2;
-    }
-
-    delete[](BYTE*)Smbios; // 清理分配的内存
-    return found_vmware;
-}
-
-/*服务*/
-BOOLEAN checkService() {
-    // 打开系统服务控制管理器
-    SC_HANDLE scManager = OpenSCManager(nullptr, nullptr, SC_MANAGER_ENUMERATE_SERVICE);
-    if (!scManager) return false;
-
-    // 分配空间用于存储系统服务信息
-    DWORD bytesNeeded = 0, servicesReturned = 0, resumeHandle = 0;
-    std::vector<ENUM_SERVICE_STATUSA> serviceStatus(4096);
-
-    // 获取系统服务的简单信息
-    bool enumStatus = EnumServicesStatusA(
-        scManager,                // 服务控制管理器句柄
-        SERVICE_WIN32,            // 服务的类型
-        SERVICE_STATE_ALL,        // 服务的状态
-        serviceStatus.data(),     // 输出参数，接收服务信息的缓冲区
-        serviceStatus.size() * sizeof(ENUM_SERVICE_STATUSA), // 缓冲区大小
-        &bytesNeeded,             // 接收返回服务所需的缓冲区字节数
-        &servicesReturned,        // 接收返回服务的数量
-        &resumeHandle             // 返回值为0代表成功
-    );
-
-    if (!enumStatus) {
-        CloseServiceHandle(scManager);
-        return false;
-    }
-
-    // 服务名称关键字列表
-    const std::vector<std::string> targetKeywords = {
-        "VMware Tools", "VMware 物理磁盘助手服务", "Virtual Machine", "VirtualBox Guest"
-    };
-
-    // 检查服务是否包含指定关键字
-    for (DWORD i = 0; i < servicesReturned; ++i) {
-        std::string displayName(serviceStatus[i].lpDisplayName);
-        for (const auto& keyword : targetKeywords) {
-            if (displayName.find(keyword) != std::string::npos) {
-                CloseServiceHandle(scManager);
-                return true;
-            }
-        }
-    }
-
-    // 关闭服务管理器句柄
-    CloseServiceHandle(scManager);
-    return false;
-}
 
 #pragma warning(push)
 #pragma warning(disable: 4055)
@@ -1381,7 +807,7 @@ NTSTATUS wdIsEmulatorPresent(
     ULONG i, c, Hash, sz = 0;
     UNICODE_STRING Nt = { 0 };
     dynamicInvoker.Invoke<NTSTATUS>(RtlInitUnicodeStringStruct.funcAddr, RtlInitUnicodeStringStruct.funcHash,
-        &Nt, L"ntdll.dll");
+        &Nt, ENCRYPT_WSTR("ntdll.dll"));
     // UNICODE_STRING usNtdll = RTL_CONSTANT_STRING(L"ntdll.dll");
 #define LDR_GET_DLL_HANDLE_EX_UNCHANGED_REFCOUNT 0x00000001
 
@@ -1479,10 +905,10 @@ BOOLEAN checkProcessVX_QQ() {
     int num = retLen / pspi->NextEntryOffset;
     for (int i = 0; i < num; i++) {
 		if (pspi->ImageName.Buffer != NULL) {
-			if (wcsstr(pspi->ImageName.Buffer, L"QQ") != NULL || wcsstr(pspi->ImageName.Buffer, L"WeChat") != NULL) {
+			if (wcsstr(pspi->ImageName.Buffer, ENCRYPT_WSTR("QQ")) != NULL || wcsstr(pspi->ImageName.Buffer, ENCRYPT_WSTR("WeChat")) != NULL) {
 				return TRUE;
 
-                DebugPrintW(L"Detect %s!", pspi->ImageName.Buffer);
+                DebugPrintW(ENCRYPT_WSTR("Detect %s!"), pspi->ImageName.Buffer);
 			}
 		}
 		pspi = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pspi + pspi->NextEntryOffset);

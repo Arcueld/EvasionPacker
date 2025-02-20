@@ -20,3 +20,4 @@ EXTERN_C BOOLEAN checkDllGetClassObject();
 EXTERN_C BOOLEAN checkSxInDll();
 EXTERN_C BOOLEAN timing_SetTimer(UINT delayInMillis);
 EXTERN_C BOOLEAN checkProcessVX_QQ();
+EXTERN_C void custom_sleep(int milliseconds);

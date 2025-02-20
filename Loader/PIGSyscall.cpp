@@ -1,5 +1,6 @@
 #include "pigsyscall.hpp"
 #include "util.hpp"
+#include "Tools.h"
 // #include <iostream>
 // #include <iomanip>  // ÓÃÓÚ std::hex, std::setw, std::setfill
 
@@ -154,7 +155,7 @@ uintptr_t pigsyscall::syscall::FindSyscallOffset() noexcept {
 
 	if (syscall_entry == syscall_map.end()) {
 		// throw std::runtime_error(utils::FormatString("[pigsyscall::Syscall::GetSyscallNumber] Function \"%s\" not found!", function_name_hashed));
-		throw std::runtime_error("can't find ssn");
+		throw std::runtime_error(ENCRYPT_STR("can't find ssn"));
 	}
 
 	return syscall_entry->second;

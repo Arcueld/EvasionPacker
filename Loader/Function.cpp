@@ -52,9 +52,8 @@ HMODULE GetMoudlebyName(WCHAR* target) {
 
 
 
-
-HMODULE Ntdll = GetMoudlebyName(_wcsdup(L"ntdll.dll"));
-HMODULE Kernel32 = GetMoudlebyName(_wcsdup(L"Kernel32.dll"));
+HMODULE Ntdll = GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("ntdll.dll")));
+HMODULE Kernel32 = GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("Kernel32.dll")));
 
 typedef HMODULE (WINAPI* pLoadLibraryW)(
 	_In_ LPCWSTR lpLibFileName

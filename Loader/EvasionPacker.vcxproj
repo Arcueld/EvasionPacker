@@ -113,7 +113,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -131,7 +131,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -156,11 +156,18 @@
     <ClInclude Include="Function.hpp" />
     <ClInclude Include="native.hpp" />
     <ClInclude Include="PIGSyscall.hpp" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="shellcode.h" />
     <ClInclude Include="ShellcodeExec.h" />
     <ClInclude Include="Struct.h" />
     <ClInclude Include="Tools.h" />
     <ClInclude Include="util.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="EvasionPacker.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

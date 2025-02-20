@@ -9,6 +9,7 @@
 #include "PIGSyscall.hpp"
 #include "config.h"
 #include "Struct.h"
+#include "Tools.h"
 
 #define SEED 0xD8
 #define HASH(API)		(utils::_HashStringRotr32A((PCHAR) API))

