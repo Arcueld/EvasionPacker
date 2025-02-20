@@ -58,6 +58,18 @@ class MainWindow(QMainWindow):
         self.compile_thread = None
         self.processing_label = None
         self.generate_btn = None  
+
+
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        paths_to_create = [
+            os.path.join(current_dir, "..", "Loader", "x64"),
+            os.path.join(current_dir, "..", "Loader", "x64", "Release")
+        ]
+        
+        for path in paths_to_create:
+            if not os.path.exists(path):
+                os.makedirs(path)
+
         self.init_ui()
         self.setMinimumWidth(900)  
         self.setMinimumHeight(1000)  

@@ -32,6 +32,14 @@ syscall 在开启时使用间接syscall 在关闭时动态调用NT函数
 
 多态化 确保每次生成的文件`HASH`不一致
 
+### 静态效果
+
+![image-20250220211035802](https://img-host-arcueid.oss-cn-hangzhou.aliyuncs.com/img202502202113510.png)
+
+![image-20250220211650741](https://img-host-arcueid.oss-cn-hangzhou.aliyuncs.com/img202502202116877.png)
+
+![image-20250220211657130](https://img-host-arcueid.oss-cn-hangzhou.aliyuncs.com/img202502202116216.png)
+
 ## 环境需求
 
 `VisualStudio`
@@ -48,14 +56,28 @@ syscall 在开启时使用间接syscall 在关闭时动态调用NT函数
 pip install -r requirement.txt 
 ```
 
+`python generator.py`拉起来就行了
+
+我也懒得打包了
+
 ## TODO
 
 `[x]` Hook NtAllocVirtualMemory Sleep 函数 接管beacon行为 进行内存隐藏
 
 `[x]` 文件捆绑
 
+`[x]` 远程拉取
+
+`[x]` 不走syscall的话unhook
+
+`[x]` shellcode格式处理 降熵值
+
 ## 致谢
 
-本项目部分功能基于如下开源项目改动 感谢以下开源项目的支持
+本项目部分功能基于如下开源项目改动 感谢以下开源项目
+
+
+
+https://github.com/aahmad097/AlternativeShellcodeExec
 
 https://github.com/evilashz/PigSyscall
