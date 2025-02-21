@@ -77,20 +77,18 @@ public:
         bool decrypted;
 
         static void Transform(wchar_t* str, size_t len) {
-            BYTE* ptr = reinterpret_cast<BYTE*>(str);
-            for (size_t i = 0; i < len * sizeof(wchar_t); i++) {
-                ptr[i] = ptr[i] ^ key[i % sizeof(key)] ^ (i & 0xFF);
+            for (size_t i = 0; i < len; i++) {
+                WORD* ptr = reinterpret_cast<WORD*>(&str[i]);
+                *ptr = *ptr ^ ((key[i % sizeof(key)] << 8) | key[(i + 1) % sizeof(key)]);
             }
         }
 
     public:
         constexpr EncryptedWString(const wchar_t* str) : data{}, decrypted(false) {
             for (size_t i = 0; i < N; i++) {
-                data[i] = str[i];
-                BYTE* ptr = reinterpret_cast<BYTE*>(&data[i]);
-                for (size_t j = 0; j < sizeof(wchar_t); j++) {
-                    ptr[j] = ptr[j] ^ key[(i * sizeof(wchar_t) + j) % sizeof(key)] ^ ((i * sizeof(wchar_t) + j) & 0xFF);
-                }
+                WORD value = static_cast<WORD>(str[i]);
+                value = value ^ ((key[i % sizeof(key)] << 8) | key[(i + 1) % sizeof(key)]);
+                data[i] = static_cast<wchar_t>(value);
             }
         }
 
