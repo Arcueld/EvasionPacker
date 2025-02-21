@@ -52,8 +52,8 @@ HMODULE GetMoudlebyName(WCHAR* target) {
 
 
 
-HMODULE Ntdll = GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("ntdll.dll")));
-HMODULE Kernel32 = GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("Kernel32.dll")));
+HMODULE Ntd1l = GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("ntdll.dll")));
+HMODULE Kn32 = GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("Kernel32.dll")));
 
 typedef HMODULE (WINAPI* pLoadLibraryW)(
 	_In_ LPCWSTR lpLibFileName
@@ -62,7 +62,7 @@ typedef HMODULE (WINAPI* pLoadLibraryW)(
 HMODULE myLoadLibrary(LPCWSTR moduleName) {
 	static pLoadLibraryW LoadLibraryWRoutine;
 	if (!LoadLibraryWRoutine) {
-		LoadLibraryWRoutine = (pLoadLibraryW)GetProcAddressbyHASH(Kernel32, LoadLibraryW_Hashed);
+		LoadLibraryWRoutine = (pLoadLibraryW)GetProcAddressbyHASH(Kn32, LoadLibraryW_Hashed);
 	}
 	if (LoadLibraryWRoutine) {
 		return LoadLibraryWRoutine(moduleName);
@@ -85,29 +85,29 @@ FunctionStruct NtIsProcessInJobStruct = { 0 };
 FunctionStruct NtCompressKeyStruct = { 0 };
 
 void initAllFunc() {
-	NtAllocateVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntdll, NtAllocateVirtualMemory_Hashed);
+	NtAllocateVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtAllocateVirtualMemory_Hashed);
 	NtAllocateVirtualMemoryStruct.funcHash = NtAllocateVirtualMemory_Hashed;
-	NtProtectVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntdll, NtProtectVirtualMemory_Hashed);
+	NtProtectVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtProtectVirtualMemory_Hashed);
 	NtProtectVirtualMemoryStruct.funcHash = NtProtectVirtualMemory_Hashed;
-	NtFreeVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntdll, NtFreeVirtualMemory_Hashed);
+	NtFreeVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtFreeVirtualMemory_Hashed);
 	NtFreeVirtualMemoryStruct.funcHash = NtFreeVirtualMemory_Hashed;
-	NtQueryVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntdll, NtQueryVirtualMemory_Hashed);
+	NtQueryVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtQueryVirtualMemory_Hashed);
 	NtQueryVirtualMemoryStruct.funcHash = NtQueryVirtualMemory_Hashed;
-	ZwQueryLicenseValueStruct.funcAddr = GetProcAddressbyHASH(Ntdll, ZwQueryLicenseValue_Hashed);
+	ZwQueryLicenseValueStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, ZwQueryLicenseValue_Hashed);
 	ZwQueryLicenseValueStruct.funcHash = ZwQueryLicenseValue_Hashed;
-	ZwQuerySystemInformationStruct.funcAddr = GetProcAddressbyHASH(Ntdll, ZwQuerySystemInformation_Hashed);
+	ZwQuerySystemInformationStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, ZwQuerySystemInformation_Hashed);
 	ZwQuerySystemInformationStruct.funcHash = ZwQuerySystemInformation_Hashed;
-	RtlExitUserProcessStruct.funcAddr = GetProcAddressbyHASH(Ntdll, RtlExitUserProcess_Hashed);
+	RtlExitUserProcessStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, RtlExitUserProcess_Hashed);
 	RtlExitUserProcessStruct.funcHash = RtlExitUserProcess_Hashed;
-	RtlInitUnicodeStringStruct.funcAddr = GetProcAddressbyHASH(Ntdll, RtlInitUnicodeString_Hashed);
+	RtlInitUnicodeStringStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, RtlInitUnicodeString_Hashed);
 	RtlInitUnicodeStringStruct.funcHash = RtlInitUnicodeString_Hashed;
-	RtlImageDirectoryEntryToDataStruct.funcAddr = GetProcAddressbyHASH(Ntdll, RtlImageDirectoryEntryToData_Hashed);
+	RtlImageDirectoryEntryToDataStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, RtlImageDirectoryEntryToData_Hashed);
 	RtlImageDirectoryEntryToDataStruct.funcHash = RtlImageDirectoryEntryToData_Hashed;
-	LdrGetDllHandleExStruct.funcAddr = GetProcAddressbyHASH(Ntdll, LdrGetDllHandleEx_Hashed);
+	LdrGetDllHandleExStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, LdrGetDllHandleEx_Hashed);
 	LdrGetDllHandleExStruct.funcHash = LdrGetDllHandleEx_Hashed;
-	NtIsProcessInJobStruct.funcAddr = GetProcAddressbyHASH(Ntdll, NtIsProcessInJob_Hashed);
+	NtIsProcessInJobStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtIsProcessInJob_Hashed);
 	NtIsProcessInJobStruct.funcHash = NtIsProcessInJob_Hashed;
-	NtCompressKeyStruct.funcAddr = GetProcAddressbyHASH(Ntdll, NtCompressKey_Hashed);
+	NtCompressKeyStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtCompressKey_Hashed);
 	NtCompressKeyStruct.funcHash = NtCompressKey_Hashed;
 
 	

