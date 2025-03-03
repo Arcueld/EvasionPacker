@@ -62,6 +62,10 @@ pip install -r requirement.txt
 
 ## TODO
 
+`[√]` 多payload控制
+
+`[x]` 添加更多执行方式 反沙箱方式
+
 `[x]` Hook NtAllocVirtualMemory Sleep 函数 接管beacon行为 进行内存隐藏
 
 `[x]` 文件捆绑
@@ -81,3 +85,5 @@ pip install -r requirement.txt
 https://github.com/aahmad097/AlternativeShellcodeExec
 
 https://github.com/evilashz/PigSyscall
+
+https://github.com/hfiref0x/UACME
