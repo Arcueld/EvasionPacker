@@ -316,6 +316,7 @@ EXTERN_C FunctionStruct RtlImageDirectoryEntryToDataStruct;
 EXTERN_C FunctionStruct LdrGetDllHandleExStruct;
 EXTERN_C FunctionStruct NtIsProcessInJobStruct;
 EXTERN_C FunctionStruct NtCompressKeyStruct;
+EXTERN_C FunctionStruct NtCreateMutantStruct;
 
 void initAllFunc();
 

@@ -83,6 +83,7 @@ FunctionStruct RtlImageDirectoryEntryToDataStruct = { 0 };
 FunctionStruct LdrGetDllHandleExStruct = { 0 };
 FunctionStruct NtIsProcessInJobStruct = { 0 };
 FunctionStruct NtCompressKeyStruct = { 0 };
+FunctionStruct NtCreateMutantStruct = { 0 };
 
 void initAllFunc() {
 	NtAllocateVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtAllocateVirtualMemory_Hashed);
@@ -109,7 +110,8 @@ void initAllFunc() {
 	NtIsProcessInJobStruct.funcHash = NtIsProcessInJob_Hashed;
 	NtCompressKeyStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtCompressKey_Hashed);
 	NtCompressKeyStruct.funcHash = NtCompressKey_Hashed;
-
+	NtCreateMutantStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtCreateMutant_Hashed);
+	NtCreateMutantStruct.funcHash = NtCreateMutant_Hashed;
 	
 }
 
