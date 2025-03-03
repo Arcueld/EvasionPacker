@@ -1,6 +1,0 @@
-numpy==1.23.4
-Pillow==11.1.0
-pycryptodome==3.10.4
-PyQt5==5.15.11
-PyQt5_sip==12.13.0
-rc4==0.2
