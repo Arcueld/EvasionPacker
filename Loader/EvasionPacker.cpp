@@ -111,11 +111,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	test();
 	initAllFunc();
 
-
-	if (isPayloadRunning()) {
-		return 0;
+	if (EnableMultiplePayloadControl) {
+		if (isPayloadRunning()) {
+			return 0;
+		}
 	}
-
 
 
 
