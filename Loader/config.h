@@ -15,5 +15,7 @@ static BOOLEAN trick_SxInDll = TRUE;
 static AllocateMethod allocateMethod = CASE_NtAllocateVirtualMemory;
 static BOOLEAN checkVXQQ = FALSE;
 static BOOLEAN EnableSteg = FALSE;
+static BOOLEAN DisableETW = TRUE;
+static BOOLEAN EnableMultiplePayloadControl = TRUE;
 static wchar_t const* stegPath = ENCRYPT_WSTR("\\1.png");
 // ==================== CONFIG END ==========================

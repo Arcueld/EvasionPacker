@@ -2025,6 +2025,7 @@
 #define BluetoothFindDeviceClose_Hashed 0x59398c67
 #define LoadLibraryW_Hashed 0xfa4b3d2d
 #define Sleep_Hashed 0x6c6565c3
+#define EtwEventWrite_Hashed 0x4c4f2e78
 
 typedef struct _UNICODE_STRING
 {

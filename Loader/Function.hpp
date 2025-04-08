@@ -317,6 +317,7 @@ EXTERN_C FunctionStruct LdrGetDllHandleExStruct;
 EXTERN_C FunctionStruct NtIsProcessInJobStruct;
 EXTERN_C FunctionStruct NtCompressKeyStruct;
 EXTERN_C FunctionStruct NtCreateMutantStruct;
+EXTERN_C FunctionStruct NtFlushInstructionCacheStruct;
 
 void initAllFunc();
 

