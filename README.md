@@ -64,6 +64,8 @@ pip install -r requirement.txt
 
 `[√]` 多payload控制
 
+`[√]` DisableETW
+
 `[x]` 添加更多执行方式 反沙箱方式
 
 `[x]` Hook NtAllocVirtualMemory Sleep 函数 接管beacon行为 进行内存隐藏
