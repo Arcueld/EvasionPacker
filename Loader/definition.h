@@ -3340,3 +3340,14 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     // SYSTEM_EXTENDED_THREAD_INFORMATION Threads[1]; // SystemExtendedProcessinformation
     // SYSTEM_EXTENDED_THREAD_INFORMATION + SYSTEM_PROCESS_INFORMATION_EXTENSION // SystemFullProcessInformation
 } SYSTEM_PROCESS_INFORMATION, * PSYSTEM_PROCESS_INFORMATION;
+
+
+typedef struct _PROCESS_BASIC_INFORMATION
+{
+    NTSTATUS ExitStatus;                    // The exit status of the process. (GetExitCodeProcess)
+    PPEB PebBaseAddress;                    // A pointer to the process environment block (PEB) of the process.
+    KAFFINITY AffinityMask;                 // The affinity mask of the process. (GetProcessAffinityMask) (deprecated)
+    KPRIORITY BasePriority;                 // The base priority of the process. (GetPriorityClass)
+    HANDLE UniqueProcessId;                 // The unique identifier of the process. (GetProcessId)
+    HANDLE InheritedFromUniqueProcessId;    // The unique identifier of the parent process.
+} PROCESS_BASIC_INFORMATION, * PPROCESS_BASIC_INFORMATION;
