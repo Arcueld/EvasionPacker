@@ -85,6 +85,7 @@ FunctionStruct NtIsProcessInJobStruct = { 0 };
 FunctionStruct NtCompressKeyStruct = { 0 };
 FunctionStruct NtCreateMutantStruct = { 0 };
 FunctionStruct NtFlushInstructionCacheStruct = { 0 };
+FunctionStruct NtQueryInformationProcessStruct = { 0 };
 
 void initAllFunc() {
 	NtAllocateVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtAllocateVirtualMemory_Hashed);
@@ -115,6 +116,8 @@ void initAllFunc() {
 	NtCreateMutantStruct.funcHash = NtCreateMutant_Hashed;
 	NtFlushInstructionCacheStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtFlushInstructionCache_Hashed);
 	NtFlushInstructionCacheStruct.funcHash = NtFlushInstructionCache_Hashed;
+	NtQueryInformationProcessStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtQueryInformationProcess_Hashed);
+	NtQueryInformationProcessStruct.funcHash = NtQueryInformationProcess_Hashed;
 }
 
 // ======================== Function INIT END =================================

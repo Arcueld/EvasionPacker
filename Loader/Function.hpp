@@ -318,7 +318,7 @@ EXTERN_C FunctionStruct NtIsProcessInJobStruct;
 EXTERN_C FunctionStruct NtCompressKeyStruct;
 EXTERN_C FunctionStruct NtCreateMutantStruct;
 EXTERN_C FunctionStruct NtFlushInstructionCacheStruct;
-
+EXTERN_C FunctionStruct NtQueryInformationProcessStruct;
 void initAllFunc();
 
 
