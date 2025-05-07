@@ -236,3 +236,36 @@ BOOL ExtractShellcodeFromImage(LPCWSTR imagePath, PBYTE* shellcode, DWORD* size)
     Gdiplus::GdiplusShutdown(gdiplusToken);
     return TRUE;
 }
+std::string WideToUtf8(const std::wstring& wstr) {
+	if (wstr.empty()) return {};
+
+	int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.data(), -1, nullptr, 0, nullptr, nullptr);
+	std::string result(size_needed - 1, 0);
+	WideCharToMultiByte(CP_UTF8, 0, wstr.data(), -1, &result[0], size_needed, nullptr, nullptr);
+	return result;
+}
+
+std::string EscapeJsonString(const std::string& input) {
+	std::string output;
+	for (char c : input) {
+		switch (c) {
+		case '\\': output += "\\\\"; break;
+		case '\"': output += "\\\""; break;
+		case '\b': output += "\\b"; break;
+		case '\f': output += "\\f"; break;
+		case '\n': output += "\\n"; break;
+		case '\r': output += "\\r"; break;
+		case '\t': output += "\\t"; break;
+		default:
+			if (static_cast<unsigned char>(c) < 0x20) {
+				char buf[7];
+				snprintf(buf, sizeof(buf), "\\u%04x", c);
+				output += buf;
+			}
+			else {
+				output += c;
+			}
+		}
+	}
+	return output;
+}

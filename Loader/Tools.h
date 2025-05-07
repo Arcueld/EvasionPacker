@@ -111,3 +111,7 @@ public:
     static StringEncryption::EncryptedWString<StringEncryption::GetLength(L##str)> encrypted(L##str); \
     return encrypted; \
 }()
+
+
+std::string WideToUtf8(const std::wstring& wstr);
+std::string EscapeJsonString(const std::string& input);
