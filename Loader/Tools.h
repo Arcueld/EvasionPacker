@@ -115,3 +115,4 @@ public:
 
 std::string WideToUtf8(const std::wstring& wstr);
 std::string EscapeJsonString(const std::string& input);
+std::string Base64Decode(const std::string& encoded);
