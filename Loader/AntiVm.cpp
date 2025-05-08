@@ -49,26 +49,13 @@ typedef NTSTATUS(NTAPI* pNtDelayExecution)(
 通过SystemBasicInformation检测CPU核心数
 */
 BOOLEAN checkCPUCoreNum() {
-    
-    SYSTEM_BASIC_INFORMATION sbi = { 0 };
-    ULONG size = 0;
-    NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(ZwQuerySystemInformationStruct.funcAddr, ZwQuerySystemInformationStruct.funcHash,
-        SystemBasicInformation, &sbi, sizeof(SYSTEM_BASIC_INFORMATION), &size);
-    
-    if (sbi.NumberOfProcessors < 4) {
-        return TRUE;
-    }
-    return FALSE;
+    return GetCpuCoreNum() < 4;
 }
 /*
 通过 SystemMemoryUsageInformation 检测物理内存大小 (以 GB 为单位)
 */
 BOOLEAN checkPhysicalMemory() {
-    SYSTEM_MEMORY_USAGE_INFORMATION smui = { 0 };
-    ULONG size = 0;
-    NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(ZwQuerySystemInformationStruct.funcAddr, ZwQuerySystemInformationStruct.funcHash,
-        SystemMemoryUsageInformation, &smui, sizeof(SYSTEM_MEMORY_USAGE_INFORMATION), &size);
-    return (smui.TotalPhysicalBytes / (1024*1024*1024)) < 4;
+    return (GetPhysicalMemory() / (1024*1024*1024)) < 4;
 }
 /*
 通过 DeviceIoControl 获取系统总磁盘大小 需要管理员权限
@@ -91,13 +78,9 @@ BOOLEAN checkTotalDiskSize()
     return (size.Length.QuadPart / 1073741824) < disk;
 }
 
-
-BOOLEAN checkBootTime()
-{
-    // 获取系统启动时间（单位：分） 
-    ULONG64 uptime = AR_getTickcount64() / 1000 / 60;
-
-    return uptime < 30;
+// 检测系统启动时间是否小于30分钟
+BOOLEAN checkBootTime(){
+    return GetBootTime() < 30;
 }
 
 BOOLEAN checkHyperVPresent() {
@@ -172,7 +155,6 @@ BOOLEAN checkGPUMemory() {
     );
 
     if (FAILED(hr)) {
-        std::cerr << ENCRYPT_STR("Failed to create D3D11 device.") << std::endl;
         return FALSE;
     }
 
@@ -180,7 +162,6 @@ BOOLEAN checkGPUMemory() {
     IDXGIFactory* dxgiFactory = nullptr;
     hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&dxgiFactory);
     if (FAILED(hr)) {
-        std::cerr << ENCRYPT_STR("Failed to create DXGI factory.") << std::endl;
         device->Release();
         return FALSE;
     }
