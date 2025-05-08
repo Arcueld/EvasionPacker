@@ -318,3 +318,21 @@ std::string Base64Decode(const std::string& encoded) {
 
 	return ret;
 }
+
+
+void custom_sleep(int milliseconds) {
+	LARGE_INTEGER frequency;  // 计时器频率
+	LARGE_INTEGER start, now;  // 开始时间和当前时间
+	double elapsedTime;
+
+	QueryPerformanceFrequency(&frequency);
+	// 当前时间
+	QueryPerformanceCounter(&start);
+
+	// 等待直到延迟时间过去
+	do {
+		QueryPerformanceCounter(&now);
+		elapsedTime = static_cast<double>(now.QuadPart - start.QuadPart) / frequency.QuadPart * 1000.0;
+	} while (elapsedTime < milliseconds);
+}
+
