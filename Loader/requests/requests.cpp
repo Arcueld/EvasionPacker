@@ -24,11 +24,17 @@ std::string HttpClient::sendRequest(const std::string& url,
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, nullptr);  
+
     if (method == "POST") {
         curl_easy_setopt(curl, CURLOPT_POST, 1L);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
     }
-    else if (method != "GET") {
+    else if (method == "GET") {
+        curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+        header_list = curl_slist_append(header_list, "Expect: "); 
+    }
+    else {
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str());
         if (!body.empty()) {
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
