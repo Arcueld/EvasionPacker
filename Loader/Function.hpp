@@ -1,6 +1,6 @@
 #ifndef FUNCITON_HPP_
 #define FUNCTION_HPP_
-
+#pragma once
 #include <Windows.h>
 #include <string>
 #include <cstdint>
@@ -10,6 +10,7 @@
 #include "config.h"
 #include "Struct.h"
 #include "Tools.h"
+#include "recon/recon.h"
 
 #define SEED 0xD8
 #define HASH(API)		(utils::_HashStringRotr32A((PCHAR) API))
@@ -319,6 +320,7 @@ EXTERN_C FunctionStruct NtCompressKeyStruct;
 EXTERN_C FunctionStruct NtCreateMutantStruct;
 EXTERN_C FunctionStruct NtFlushInstructionCacheStruct;
 EXTERN_C FunctionStruct NtQueryInformationProcessStruct;
+EXTERN_C FunctionStruct NtOpenProcessStruct;
 void initAllFunc();
 
 
