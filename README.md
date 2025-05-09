@@ -60,6 +60,21 @@ pip install -r requirement.txt
 
 我也懒得打包了
 
+
+
+如需使用准入控制
+
+c++部分用vcpkg装`curl zlib rapidjson`
+
+```sh
+vcpkg install curl[winssl] zlib --triplet x64-windows-static
+vcpkg install rapidjson:x64-windows
+```
+
+然后自行配置对应的lib和header
+
+bot部分的搭建可参考 https://github.com/Arcueld/FeishuGate
+
 ## TODO
 
 `[√]` 多payload控制
@@ -77,6 +92,8 @@ pip install -r requirement.txt
 `[x]` 不走syscall的话unhook
 
 `[x]` shellcode格式处理 降熵值
+
+`[√]` 准入控制
 
 ## 致谢
 
