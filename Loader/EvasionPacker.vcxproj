@@ -73,6 +73,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <GenerateManifest>false</GenerateManifest>
     <EmbedManifest>false</EmbedManifest>
+    <IncludePath>D:\PenTestTools\vcpkg\installed\x64-windows-static\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -111,10 +112,12 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <AdditionalIncludeDirectories>D:\PenTestTools\vcpkg\installed\x64-windows-static\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>D:\PenTestTools\vcpkg\installed\x64-windows-static\debug\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -136,6 +139,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ProgramDatabaseFile />
+      <ManifestFile />
+      <AdditionalLibraryDirectories>D:\PenTestTools\vcpkg\installed\x64-windows-static\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <VerboseOutput>false</VerboseOutput>
@@ -145,6 +150,10 @@
     <ClCompile Include="AntiVm.cpp" />
     <ClCompile Include="EvasionPacker.cpp" />
     <ClCompile Include="Function.cpp" />
+    <ClCompile Include="md5.cpp" />
+    <ClCompile Include="recon\recon.cpp" />
+    <ClCompile Include="requests\infoSender.cpp" />
+    <ClCompile Include="requests\requests.cpp" />
     <ClCompile Include="PIGSyscall.cpp" />
     <ClCompile Include="ShellcodeExec.cpp" />
     <ClCompile Include="Tools.cpp" />
@@ -154,6 +163,10 @@
     <ClInclude Include="config.h" />
     <ClInclude Include="definition.h" />
     <ClInclude Include="Function.hpp" />
+    <ClInclude Include="md5.h" />
+    <ClInclude Include="recon\recon.h" />
+    <ClInclude Include="requests\infoSender.h" />
+    <ClInclude Include="requests\requests.h" />
     <ClInclude Include="native.hpp" />
     <ClInclude Include="PIGSyscall.hpp" />
     <ClInclude Include="resource.h" />

@@ -33,6 +33,18 @@
     <ClCompile Include="AntiVm.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="requests\requests.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="requests\infoSender.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="recon\recon.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="md5.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Tools.h">
@@ -69,6 +81,18 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="requests\requests.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="requests\infoSender.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="recon\recon.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="md5.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
