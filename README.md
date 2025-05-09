@@ -62,8 +62,6 @@ pip install -r requirement.txt
 
 
 
-如需使用准入控制
-
 c++部分用vcpkg装`curl zlib rapidjson`
 
 ```sh
@@ -71,7 +69,9 @@ vcpkg install curl[winssl] zlib --triplet x64-windows-static
 vcpkg install rapidjson:x64-windows
 ```
 
-然后自行配置对应的lib和header
+然后自行配置对应的lib和header `AdditionalIncludeDirectories` `AdditionalLibraryDirectories`
+
+![image-20250509191541015](https://img-host-arcueid.oss-cn-hangzhou.aliyuncs.com/img202505091915084.png)
 
 bot部分的搭建可参考 https://github.com/Arcueld/FeishuGate
 
