@@ -156,6 +156,9 @@ class ConfigManager:
             f.write(",".join(f"0x{b:02x}" for b in self.key))
             f.write("};\n")
             f.write(f"unsigned int key_size = {len(self.key)};\n\n")
+            f.write("unsigned char shellcode[] = {};")
+            f.write("unsigned int shellcode_size = 0;")
+
 
     def save_to_header_placeholder(self, shellcode_size):
         output_path = os.path.join(self.output_dir, "shellcode.h")
