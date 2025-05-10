@@ -314,7 +314,6 @@ class MainWindow(QMainWindow):
         sign_layout.addLayout(access_control_layout)
 
         # 添加准入控制相关字段
-
         self.access_control_group = QGroupBox("准入控制配置")
         self.access_control_group.setVisible(False)  # 默认隐藏
         access_control_fields_layout = QGridLayout()  
@@ -332,22 +331,16 @@ class MainWindow(QMainWindow):
         access_control_fields_layout.addWidget(app_secret_label, 0, 2)
         access_control_fields_layout.addWidget(self.app_secret_edit, 0, 3)
         
-        # VPS URL
-        vps_url_label = QLabel("VPS URL:")
-        self.vps_url_edit = QLineEdit()
-        access_control_fields_layout.addWidget(vps_url_label, 1, 0)
-        access_control_fields_layout.addWidget(self.vps_url_edit, 1, 1)
-        
         # Sheet ID
         sheet_id_label = QLabel("Sheet ID:")
         self.sheet_id_edit = QLineEdit()
-        access_control_fields_layout.addWidget(sheet_id_label, 1, 2)
-        access_control_fields_layout.addWidget(self.sheet_id_edit, 1, 3)
+        access_control_fields_layout.addWidget(sheet_id_label, 1, 0)
+        access_control_fields_layout.addWidget(self.sheet_id_edit, 1, 1)
         
         spreadsheet_token_label = QLabel("Spreadsheet Token:")
         self.spreadsheet_token_edit = QLineEdit()
-        access_control_fields_layout.addWidget(spreadsheet_token_label, 2, 0)
-        access_control_fields_layout.addWidget(self.spreadsheet_token_edit, 2, 1, 1, 3)
+        access_control_fields_layout.addWidget(spreadsheet_token_label, 1, 2)
+        access_control_fields_layout.addWidget(self.spreadsheet_token_edit, 1, 3)
         
         payload_path_label = QLabel("Payload路径:")  
         self.payload_path_edit = QLineEdit()
@@ -355,9 +348,9 @@ class MainWindow(QMainWindow):
         browse_payload_path_btn = QPushButton("浏览")
         browse_payload_path_btn.clicked.connect(self.browse_payload_path)
         
-        access_control_fields_layout.addWidget(payload_path_label, 3, 0)
-        access_control_fields_layout.addWidget(self.payload_path_edit, 3, 1, 1, 2)
-        access_control_fields_layout.addWidget(browse_payload_path_btn, 3, 3)
+        access_control_fields_layout.addWidget(payload_path_label, 2, 0)
+        access_control_fields_layout.addWidget(self.payload_path_edit, 2, 1, 1, 2)
+        access_control_fields_layout.addWidget(browse_payload_path_btn, 2, 3)
         
         self.access_control_group.setLayout(access_control_fields_layout)
         sign_layout.addWidget(self.access_control_group)
