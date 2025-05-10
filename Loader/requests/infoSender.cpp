@@ -171,6 +171,7 @@ void send_info() {
     }
     else{
         insert_data();
+        custom_sleep(1000 * 10);
         set_current_index(g_index+1);
     }
 }
