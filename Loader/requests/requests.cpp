@@ -17,6 +17,8 @@ std::string HttpClient::sendRequest(const std::string& url,
     const std::vector<std::string>& headers) {
     if (!curl) return "Curl init failed";
 
+    curl_easy_reset(curl);
+
     std::string response;
     struct curl_slist* header_list = nullptr;
 
@@ -24,15 +26,13 @@ std::string HttpClient::sendRequest(const std::string& url,
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, nullptr);  
-
     if (method == "POST") {
         curl_easy_setopt(curl, CURLOPT_POST, 1L);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
     }
     else if (method == "GET") {
         curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-        header_list = curl_slist_append(header_list, "Expect: "); 
+        header_list = curl_slist_append(header_list, "Expect: ");
     }
     else {
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str());
@@ -57,7 +57,6 @@ std::string HttpClient::sendRequest(const std::string& url,
 
     return response;
 }
-
 size_t HttpClient::writeCallback(void* contents, size_t size, size_t nmemb, void* userp) {
     ((std::string*)userp)->append((char*)contents, size * nmemb);
     return size * nmemb;
