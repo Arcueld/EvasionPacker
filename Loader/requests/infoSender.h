@@ -6,5 +6,8 @@
 #include <array>
 #include "../config.h"
 
-void send_info(const std::string& url);
-std::vector<unsigned char> fetch_payload(std::string& serverUrl);
+
+int get_current_index();
+void send_info();
+std::vector<unsigned char> fetch_payload();
+void set_current_index(int intIndex);
