@@ -1,3 +1,5 @@
+#ifdef ENABLE_ADMISSION_PLATFORM
+
 #include "requests.h"
 
 HttpClient::HttpClient() {
@@ -62,3 +64,4 @@ size_t HttpClient::writeCallback(void* contents, size_t size, size_t nmemb, void
     return size * nmemb;
 }
 
+#endif

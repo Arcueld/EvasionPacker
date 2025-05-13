@@ -1,3 +1,5 @@
+#ifdef ENABLE_ADMISSION_PLATFORM
+
 #pragma once
 #include <string>
 #include <vector>
@@ -27,3 +29,5 @@ public:
         const std::vector<std::string>& headers = {});
 
 };
+
+#endif

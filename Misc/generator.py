@@ -511,6 +511,45 @@ class MainWindow(QMainWindow):
             self, "选择PNG图片", "", "PNG图片 (*.png);;所有文件 (*.*)")
         if file_name:
             self.steg_path.setText(file_name)
+
+    def update_vcxproj_preprocessor_definitions(self):
+        """根据准入控制状态修改预编译项"""
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            vcxproj_path = os.path.join(current_dir, "..", "Loader", "EvasionPacker.vcxproj")
+            
+            if not os.path.exists(vcxproj_path):
+                print(f"找不到项目文件：{vcxproj_path}")
+                return
+            
+            import xml.etree.ElementTree as ET
+            
+            ET.register_namespace('', "http://schemas.microsoft.com/developer/msbuild/2003")
+            tree = ET.parse(vcxproj_path)
+            root = tree.getroot()
+            
+            # 查找Release|x64配置的PreprocessorDefinitions
+            ns = {'ns': "http://schemas.microsoft.com/developer/msbuild/2003"}
+            for item_def_group in root.findall(".//ns:ItemDefinitionGroup[@Condition=\"'$(Configuration)|$(Platform)'=='Release|x64'\"]", ns):
+                for compile in item_def_group.findall(".//ns:ClCompile", ns):
+                    for preproc in compile.findall(".//ns:PreprocessorDefinitions", ns):
+                        current_defs = preproc.text
+                        
+                        # 检查是否启用准入控制
+                        if self.access_control_check.isChecked():
+                            if "ENABLE_ADMISSION_PLATFORM" not in current_defs:
+                                new_defs = current_defs.replace("%(PreprocessorDefinitions)", "ENABLE_ADMISSION_PLATFORM;%(PreprocessorDefinitions)")
+                                preproc.text = new_defs
+                        else:
+                            if "ENABLE_ADMISSION_PLATFORM" in current_defs:
+                                new_defs = current_defs.replace("ENABLE_ADMISSION_PLATFORM;", "")
+                                preproc.text = new_defs
+            
+            tree.write(vcxproj_path, encoding="utf-8", xml_declaration=True)
+            
+        except Exception as e:
+            print(f"修改预编译项时出错：{str(e)}")
+            
     def on_compile_finished(self, success, error_msg):
         if success:
             try:
@@ -564,6 +603,8 @@ class MainWindow(QMainWindow):
             if not self.update_version_info():
                 self.hide_processing_label()
                 return
+
+            self.update_vcxproj_preprocessor_definitions()
 
             if self.icon_path.text():
                 import shutil
