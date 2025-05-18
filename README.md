@@ -87,13 +87,11 @@ bot部分的搭建可参考 https://github.com/Arcueld/FeishuGate
 
 `[x]` 文件捆绑
 
-`[x]` 远程拉取
-
 `[x]` 不走syscall的话unhook
 
-`[x]` shellcode格式处理 降熵值
-
 `[√]` 准入控制
+
+`[√]` 权限维持
 
 ## 致谢
 
@@ -106,3 +104,7 @@ https://github.com/aahmad097/AlternativeShellcodeExec
 https://github.com/evilashz/PigSyscall
 
 https://github.com/hfiref0x/UACME
+
+# 更新
+
+2025-05-18 通过RPC添加计划任务 自动将当前文件注册进计划任务 开机时执行
