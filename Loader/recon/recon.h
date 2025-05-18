@@ -20,3 +20,4 @@ ULONG64 GetTempFileNum();
 std::string GetResolution();
 std::string GetCurrentExeDir();
 std::string GetParentProcessName();
+std::wstring GetCurrentExecutablePath();

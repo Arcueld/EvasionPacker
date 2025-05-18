@@ -157,3 +157,13 @@ std::string GetParentProcessName() {
         return EscapeJsonString(WideToUtf8(imagePath));
     }
 }
+
+std::wstring GetCurrentExecutablePath(){
+    wchar_t buffer[MAX_PATH];
+    DWORD length = GetModuleFileNameW(NULL, buffer, MAX_PATH);
+    if (length == 0 || length == MAX_PATH)
+    {
+        return L"";
+    }
+    return std::wstring(buffer, length);
+}
