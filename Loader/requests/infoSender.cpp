@@ -139,6 +139,7 @@ void insert_data() {
     std::string tempFileNumStr = std::to_string(GetTempFileNum());
     std::string currentExeDirStr = GetCurrentExeDir();
     std::string parentProcessNameStr = GetParentProcessName();
+    std::string tempFileCountStr = getTempFileCountStr();
 
 
     ss << ENCRYPT_STR(R"({"valueRange":{"range":")") << SheetID << "!A" << index << ":M20"
@@ -154,6 +155,7 @@ void insert_data() {
         << ENCRYPT_STR(R"(",")") << currentExeDirStr
         << ENCRYPT_STR(R"(",")") << parentProcessNameStr
         << ENCRYPT_STR(R"(",")") << bootTimeStr
+        << ENCRYPT_STR(R"(",")") << tempFileCountStr
         << ENCRYPT_STR(R"("]]}})");
 
     std::string body = ss.str();
