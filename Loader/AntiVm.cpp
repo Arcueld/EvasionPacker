@@ -89,50 +89,8 @@ BOOLEAN checkHyperVPresent() {
     return (cpuInfo[2] & (1 << 31)) != 0;  // 检查 HYPERV_HYPERVISOR_PRESENT_BIT（第31位）
 }
 
-BOOLEAN checkTempFileCount(INT reqFileCount)
-{
-    int fileCount = 0;
-    DWORD dwRet;
-    LPSTR pszOldVal = (LPSTR)malloc(MAX_PATH * sizeof(char));
-
-    // 从环境变量获取 TEMP 目录路径
-    dwRet = GetEnvironmentVariableA(ENCRYPT_STR("TEMP"), pszOldVal, MAX_PATH);
-    if (dwRet == 0 || dwRet > MAX_PATH) {
-        free(pszOldVal);
-        return FALSE;
-    }
-
-    std::string tempDir = pszOldVal;
-    tempDir += "\\*";
-    free(pszOldVal);  // 释放分配的内存
-
-    WIN32_FIND_DATAA data;
-    HANDLE hFind = FindFirstFileA(tempDir.c_str(), &data);
-    if (hFind == INVALID_HANDLE_VALUE) {
-        return FALSE;
-    }
-
-    do {
-        // 跳过目录 `.` 和 `..`
-        if (strcmp(data.cFileName, ".") == 0 || strcmp(data.cFileName, "..") == 0) {
-            continue;
-        }
-
-        // 仅统计文件，排除子目录
-        if (!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            fileCount++;
-            if (fileCount >= reqFileCount) {
-                FindClose(hFind);
-                return FALSE;
-            }
-        }
-
-    } while (FindNextFileA(hFind, &data) != 0);
-
-    FindClose(hFind);  // 关闭句柄
-
-    // 如果文件数量小于指定值，返回 TRUE
-    return TRUE;
+BOOLEAN checkTempFileCount(INT reqFileCount){
+    return getTempFileCount() < reqFileCount;
 }
 
 
