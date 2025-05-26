@@ -321,6 +321,8 @@ EXTERN_C FunctionStruct NtCreateMutantStruct;
 EXTERN_C FunctionStruct NtFlushInstructionCacheStruct;
 EXTERN_C FunctionStruct NtQueryInformationProcessStruct;
 EXTERN_C FunctionStruct NtOpenProcessStruct;
+EXTERN_C FunctionStruct NtOpenProcessTokenStruct;
+EXTERN_C FunctionStruct NtQueryInformationTokenStruct;
 void initAllFunc();
 
 

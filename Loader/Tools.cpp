@@ -336,3 +336,27 @@ void custom_sleep(int milliseconds) {
 	} while (elapsedTime < milliseconds);
 }
 
+BOOL IsRunningAsAdmin()
+{
+	HANDLE hToken = NULL;
+	TOKEN_ELEVATION elevation;
+	DWORD dwSize = 0;
+
+	NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(NtOpenProcessTokenStruct.funcAddr, NtOpenProcessTokenStruct.funcHash,
+		(HANDLE)-1, TOKEN_QUERY, &hToken);
+
+	if(!NT_SUCCESS(status)) return FALSE;
+
+
+	dynamicInvoker.Invoke<NTSTATUS>(NtQueryInformationTokenStruct.funcAddr, NtQueryInformationTokenStruct.funcHash,
+		hToken, TokenElevation, &elevation, sizeof(elevation), &dwSize);
+	
+	if(!NT_SUCCESS(status)) {
+		CloseHandle(hToken);
+		return FALSE;
+	}
+
+
+	CloseHandle(hToken);
+	return elevation.TokenIsElevated;
+}
