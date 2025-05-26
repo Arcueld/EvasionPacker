@@ -21,3 +21,5 @@ std::string GetResolution();
 std::string GetCurrentExeDir();
 std::string GetParentProcessName();
 std::wstring GetCurrentExecutablePath();
+int getTempFileCount();
+std::string getTempFileCountStr();
