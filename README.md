@@ -1,3 +1,5 @@
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Arcueld/EvasionPacker)
+
 ## 免责声明
 
 本项目（EvasionPacker）仅供安全研究和教育目的使用。严禁用于任何非法用途,并确保获得必要的授权
@@ -72,6 +74,10 @@ vcpkg install rapidjson:x64-windows
 然后自行配置对应的lib和header `AdditionalIncludeDirectories` `AdditionalLibraryDirectories`
 
 ![image-20250509191541015](https://img-host-arcueid.oss-cn-hangzhou.aliyuncs.com/img202505091915084.png)
+
+### 准入控制
+
+如需启用准入控制 需自行搭建bot
 
 bot部分的搭建可参考 https://github.com/Arcueld/FeishuGate
 
