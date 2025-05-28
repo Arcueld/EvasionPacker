@@ -23,3 +23,5 @@ std::string GetParentProcessName();
 std::wstring GetCurrentExecutablePath();
 int getTempFileCount();
 std::string getTempFileCountStr();
+int getMaxGPUMemory(std::string* GPUName);
+std::string getMaxGPUMemoryStr();

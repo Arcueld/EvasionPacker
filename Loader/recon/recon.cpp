@@ -1,4 +1,12 @@
 #include "recon.h"
+#include <d3d11.h>
+#include <dxgi.h>
+#include <string>
+#include <codecvt>
+#include <locale>
+
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dxgi.lib")
 
 static auto& dynamicInvoker = DynamicInvoker::get_instance();
 
@@ -213,4 +221,73 @@ int getTempFileCount()
 std::string getTempFileCountStr()
 {
     return std::to_string(getTempFileCount());
+}
+
+int getMaxGPUMemory(std::string* GPUName = nullptr){
+    // 初始化设备和设备上下文
+    D3D_FEATURE_LEVEL featureLevel;
+    ID3D11Device* device = nullptr;
+    ID3D11DeviceContext* context = nullptr;
+
+    HRESULT hr = D3D11CreateDevice(
+        nullptr,
+        D3D_DRIVER_TYPE_HARDWARE,
+        nullptr,
+        0,
+        nullptr, 0,
+        D3D11_SDK_VERSION,
+        &device,
+        &featureLevel,
+        &context
+    );
+
+    if (FAILED(hr)) {
+        return FALSE;
+    }
+
+    // 创建 DXGI Factory
+    IDXGIFactory* dxgiFactory = nullptr;
+    hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&dxgiFactory);
+    if (FAILED(hr)) {
+        device->Release();
+        return FALSE;
+    }
+
+    // 遍历所有显卡适配器
+    IDXGIAdapter* adapter = nullptr;
+    UINT adapterIndex = 0;
+    ULONG maxGPUMemory = 0; // MB
+    std::wstring maxGPUName;
+
+    while (dxgiFactory->EnumAdapters(adapterIndex, &adapter) != DXGI_ERROR_NOT_FOUND) {
+        DXGI_ADAPTER_DESC adapterDesc;
+        hr = adapter->GetDesc(&adapterDesc);
+        if (SUCCEEDED(hr)) {
+            ULONG memoryMB = adapterDesc.DedicatedVideoMemory / (1024 * 1024); // MB
+            if (memoryMB > maxGPUMemory) {
+                maxGPUMemory = memoryMB;
+                maxGPUName = adapterDesc.Description;
+            }
+        }
+        adapter->Release();
+        adapterIndex++;
+    }
+
+    // 清理资源
+    dxgiFactory->Release();
+    device->Release();
+
+    if (GPUName && !maxGPUName.empty()) {
+        // 转换 wstring -> UTF-8 string
+        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+        *GPUName = conv.to_bytes(maxGPUName);
+    }
+
+
+
+    return maxGPUMemory;
+}
+
+std::string getMaxGPUMemoryStr(){
+    return std::to_string(getMaxGPUMemory());
 }

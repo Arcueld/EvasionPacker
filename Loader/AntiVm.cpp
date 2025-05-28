@@ -9,8 +9,6 @@
 #include <cstring>
 #include <vector>
 #include <regex>
-#include <d3d11.h>
-#include <dxgi.h>
 #include <iphlpapi.h>
 #include "definition.h"
 #include "Tools.h"
@@ -20,8 +18,7 @@
 #pragma comment(lib, "PowrProf.lib")
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "wbemuuid.lib")
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "dxgi.lib")
+
 
 
 
@@ -95,64 +92,12 @@ BOOLEAN checkTempFileCount(INT reqFileCount){
 
 
 BOOLEAN checkGPUMemory() {
-    // 初始化设备和设备上下文
-    D3D_FEATURE_LEVEL featureLevel;
-    ID3D11Device* device = nullptr;
-    ID3D11DeviceContext* context = nullptr;
+    BOOLEAN lowMemoryGPU = TRUE;
 
-    HRESULT hr = D3D11CreateDevice(
-        nullptr,                   // 使用默认适配器
-        D3D_DRIVER_TYPE_HARDWARE,  // 使用硬件驱动
-        nullptr,                   // 不使用软件驱动
-        0,                         // 无调试标志
-        nullptr, 0,                // 默认特性级别
-        D3D11_SDK_VERSION,         // SDK 版本
-        &device,                   // 返回设备指针
-        &featureLevel,             // 返回特性级别
-        &context                   // 返回设备上下文
-    );
-
-    if (FAILED(hr)) {
-        return FALSE;
+    // 如果显卡显存大于0.5GB，则认为该显卡不是低显存
+    if (getMaxGPUMemory(NULL) > 512) {
+        lowMemoryGPU = FALSE;  // 至少有一张显卡显存大于0.5GB，标记为非low
     }
-
-    // 创建 DXGI Factory
-    IDXGIFactory* dxgiFactory = nullptr;
-    hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&dxgiFactory);
-    if (FAILED(hr)) {
-        device->Release();
-        return FALSE;
-    }
-
-    // 枚举所有显卡适配器
-    IDXGIAdapter* adapter = nullptr;
-    UINT adapterIndex = 0;
-    BOOLEAN lowMemoryGPU = TRUE;  // 默认假设所有显卡都属于 low memory
-
-    while (dxgiFactory->EnumAdapters(adapterIndex, &adapter) != DXGI_ERROR_NOT_FOUND) {
-        // 获取显卡描述
-        DXGI_ADAPTER_DESC adapterDesc;
-        hr = adapter->GetDesc(&adapterDesc);
-        if (FAILED(hr)) {
-            adapter->Release();
-            break;
-        }
-
-        //std::wcout << L"GPU Name: " << adapterDesc.Description << std::endl;
-        //std::wcout << L"Dedicated Video Memory: " << adapterDesc.DedicatedVideoMemory / 1024 / 1024 << L" MB" << std::endl;
-
-        // 如果显卡显存大于0.5GB，则认为该显卡不是低显存
-        if ((adapterDesc.DedicatedVideoMemory / 1024 / 1024) > 512) {
-            lowMemoryGPU = FALSE;  // 至少有一张显卡显存大于0.5GB，标记为非low
-        }
-
-        adapter->Release();
-        adapterIndex++;
-    }
-
-    // 清理资源
-    dxgiFactory->Release();
-    device->Release();
 
     return lowMemoryGPU;
 }
