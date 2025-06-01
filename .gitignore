@@ -365,3 +365,10 @@ FodyWeavers.xsd
 
 Loader/*.rc
 Loader/*.vcxproj
+.vscode/
+Misc/payload
+Misc/__pycache__
+Loader/*.png
+Loader/*.ico
+Loader/EvasionPacker/
+Loader/x64

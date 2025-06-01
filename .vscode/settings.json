@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "*.embeddedhtml": "html",
-        "*.sage": "python",
-        "xstring": "cpp"
-    }
-}
