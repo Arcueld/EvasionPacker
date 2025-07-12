@@ -324,6 +324,8 @@ EXTERN_C FunctionStruct NtOpenProcessStruct;
 EXTERN_C FunctionStruct NtOpenProcessTokenStruct;
 EXTERN_C FunctionStruct NtQueryInformationTokenStruct;
 EXTERN_C FunctionStruct NtSetInformationProcessStruct;
+EXTERN_C FunctionStruct NtCloseStruct;
+EXTERN_C FunctionStruct NtAdjustPrivilegesTokenStruct;
 void initAllFunc();
 
 

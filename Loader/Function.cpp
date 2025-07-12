@@ -90,6 +90,8 @@ FunctionStruct NtOpenProcessStruct = { 0 };
 FunctionStruct NtOpenProcessTokenStruct = { 0 };
 FunctionStruct NtQueryInformationTokenStruct = { 0 };
 FunctionStruct NtSetInformationProcessStruct = { 0 };
+FunctionStruct NtCloseStruct = { 0 };
+FunctionStruct NtAdjustPrivilegesTokenStruct = { 0 };
 
 void initAllFunc() {
 	NtAllocateVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtAllocateVirtualMemory_Hashed);
@@ -130,6 +132,10 @@ void initAllFunc() {
 	NtQueryInformationTokenStruct.funcHash = NtQueryInformationToken_Hashed;
 	NtSetInformationProcessStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtSetInformationProcess_Hashed);
 	NtSetInformationProcessStruct.funcHash = NtSetInformationProcess_Hashed;
+	NtCloseStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtClose_Hashed);
+	NtCloseStruct.funcHash = NtClose_Hashed;
+	NtAdjustPrivilegesTokenStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtAdjustPrivilegesToken_Hashed);
+	NtAdjustPrivilegesTokenStruct.funcHash = NtAdjustPrivilegesToken_Hashed;
 }
 
 // ======================== Function INIT END =================================

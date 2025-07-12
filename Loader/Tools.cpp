@@ -360,3 +360,124 @@ BOOL IsRunningAsAdmin()
 	CloseHandle(hToken);
 	return elevation.TokenIsElevated;
 }
+
+BOOL SetPrivilege(LPCWSTR privilege)
+{
+	// 64-bit only
+	if (sizeof(LPVOID) != 8)
+	{
+		return FALSE;
+	}
+
+	// Initialize handle to process token
+	HANDLE token = NULL;
+
+	// Open our token
+	if (!NT_SUCCESS(dynamicInvoker.Invoke<NTSTATUS>(NtOpenProcessTokenStruct.funcAddr, NtOpenProcessTokenStruct.funcHash
+		,(HANDLE)-1, TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES, &token))){
+		return FALSE;
+	}
+
+	// Token elevation struct
+	TOKEN_ELEVATION tokenElevation = { 0 };
+	DWORD tokenElevationSize = sizeof(TOKEN_ELEVATION);
+
+	// Get token elevation status
+	if (dynamicInvoker.Invoke<NTSTATUS>(NtQueryInformationTokenStruct.funcAddr, NtQueryInformationTokenStruct.funcHash,
+		token, TokenElevation, &tokenElevation, sizeof(tokenElevation), &tokenElevationSize) != 0)
+	{
+		dynamicInvoker.Invoke<NTSTATUS>(NtCloseStruct.funcAddr, NtCloseStruct.funcHash ,token);
+		return FALSE;
+	}
+
+	// Check if token is elevated
+	if (!tokenElevation.TokenIsElevated)
+	{
+		dynamicInvoker.Invoke<NTSTATUS>(NtCloseStruct.funcAddr, NtCloseStruct.funcHash, token);
+		return FALSE;
+	}
+
+	// Lookup the LUID for the specified privilege
+	LUID luid;
+	if (!LookupPrivilegeValue(NULL, privilege, &luid))
+	{
+		dynamicInvoker.Invoke<NTSTATUS>(NtCloseStruct.funcAddr, NtCloseStruct.funcHash, token);
+		return FALSE;
+	}
+
+	// Size of token privilege struct
+	DWORD tokenPrivsSize = 0;
+
+	// Get size of current privilege array
+	if (dynamicInvoker.Invoke<NTSTATUS>(NtQueryInformationTokenStruct.funcAddr, NtQueryInformationTokenStruct.funcHash,
+		token, TokenPrivileges, NULL, NULL, &tokenPrivsSize) != 0xC0000023){
+		dynamicInvoker.Invoke<NTSTATUS>(NtCloseStruct.funcAddr, NtCloseStruct.funcHash, token);
+		return FALSE;
+	}
+
+	// Allocate memory to store current token privileges
+	PTOKEN_PRIVILEGES tokenPrivs = (PTOKEN_PRIVILEGES)new BYTE[tokenPrivsSize];
+
+	// Get current token privileges
+	if (dynamicInvoker.Invoke<NTSTATUS>(NtQueryInformationTokenStruct.funcAddr, NtQueryInformationTokenStruct.funcHash, token, TokenPrivileges, tokenPrivs, tokenPrivsSize, &tokenPrivsSize) != 0)
+	{
+		delete tokenPrivs;
+		dynamicInvoker.Invoke<NTSTATUS>(NtCloseStruct.funcAddr, NtCloseStruct.funcHash, token);
+		return FALSE;
+	}
+
+	// Track whether or not token has the specified privilege
+	BOOL status = FALSE;
+
+	// Loop through privileges assigned to token to find the specified privilege
+	for (DWORD i = 0; i < tokenPrivs->PrivilegeCount; i++)
+	{
+		if (tokenPrivs->Privileges[i].Luid.LowPart == luid.LowPart &&
+			tokenPrivs->Privileges[i].Luid.HighPart == luid.HighPart)
+		{
+			// Located the specified privilege, enable it if necessary
+			if (!(tokenPrivs->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED))
+			{
+				tokenPrivs->Privileges[i].Attributes |= SE_PRIVILEGE_ENABLED;
+
+				// Apply updated privilege struct to token
+				if (dynamicInvoker.Invoke<NTSTATUS>(NtAdjustPrivilegesTokenStruct.funcAddr, NtAdjustPrivilegesTokenStruct.funcHash,
+					token, FALSE, tokenPrivs, tokenPrivsSize, NULL, NULL) == 0){
+					status = TRUE;
+				}
+			}
+			else{
+				status = TRUE;
+			}
+			break;
+		}
+	}
+
+	// Free token privileges buffer
+	delete tokenPrivs;
+
+	// Close token handle
+	dynamicInvoker.Invoke<NTSTATUS>(NtCloseStruct.funcAddr, NtCloseStruct.funcHash, (token));
+
+	return status;
+}
+
+/*
+auto DisableETWTI() -> BOOLEAN{
+	SetPrivilege(SE_DEBUG_NAME);
+	PROCESS_LOGGING_INFORMATION logInfo = { 0 };
+	logInfo.EnableReadVmLogging = false;
+	logInfo.EnableWriteVmLogging = false;
+	size_t logInfoLength = sizeof(logInfo);
+	NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(NtSetInformationProcessStruct.funcAddr, NtSetInformationProcessStruct.funcHash, 
+		(HANDLE)-1,
+		ProcessEnableLogging,
+		&logInfo, 
+		logInfoLength
+	);
+
+	if (NT_SUCCESS(status)) return TRUE;
+	return FALSE;
+
+}
+*/
