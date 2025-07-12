@@ -3474,3 +3474,19 @@ typedef enum _PROCESSINFOCLASS
     ProcessAvailableCpus, // PROCESS_AVAILABLE_CPUS_INFORMATION
     MaxProcessInfoClass
 } PROCESSINFOCLASS;
+
+typedef union _PROCESS_LOGGING_INFORMATION
+{
+    ULONG Flags;
+    struct
+    {
+        ULONG EnableReadVmLogging : 1;
+        ULONG EnableWriteVmLogging : 1;
+        ULONG EnableProcessSuspendResumeLogging : 1;
+        ULONG EnableThreadSuspendResumeLogging : 1;
+        ULONG EnableLocalExecProtectVmLogging : 1;
+        ULONG EnableRemoteExecProtectVmLogging : 1;
+        ULONG EnableImpersonationLogging : 1;
+        ULONG Reserved : 25;
+    };
+} PROCESS_LOGGING_INFORMATION, * PPROCESS_LOGGING_INFORMATION;

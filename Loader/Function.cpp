@@ -89,6 +89,7 @@ FunctionStruct NtQueryInformationProcessStruct = { 0 };
 FunctionStruct NtOpenProcessStruct = { 0 };
 FunctionStruct NtOpenProcessTokenStruct = { 0 };
 FunctionStruct NtQueryInformationTokenStruct = { 0 };
+FunctionStruct NtSetInformationProcessStruct = { 0 };
 
 void initAllFunc() {
 	NtAllocateVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtAllocateVirtualMemory_Hashed);
@@ -127,6 +128,8 @@ void initAllFunc() {
 	NtOpenProcessTokenStruct.funcHash = NtOpenProcessToken_Hashed;
 	NtQueryInformationTokenStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtQueryInformationToken_Hashed);
 	NtQueryInformationTokenStruct.funcHash = NtQueryInformationToken_Hashed;
+	NtSetInformationProcessStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtSetInformationProcess_Hashed);
+	NtSetInformationProcessStruct.funcHash = NtSetInformationProcess_Hashed;
 }
 
 // ======================== Function INIT END =================================
