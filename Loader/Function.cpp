@@ -1,6 +1,6 @@
 #include "function.hpp"
 
-LPVOID GetProcAddressbyHASH(HMODULE hModule, DWORD funcHash) {
+auto GetProcAddressbyHASH(HMODULE hModule, DWORD funcHash) -> LPVOID {
 	if (hModule == NULL || funcHash == NULL)
 		return NULL;
 	PBYTE pBase = (PBYTE)hModule;
@@ -34,7 +34,7 @@ LPVOID GetProcAddressbyHASH(HMODULE hModule, DWORD funcHash) {
 	return NULL;
 }
 
-HMODULE GetMoudlebyName(WCHAR* target) {
+auto GetMoudlebyName(WCHAR* target) -> HMODULE {
 	PPEB_LDR_DATA ldrData = peb->LoaderData;
 	PLIST_ENTRY moduleList = &ldrData->InLoadOrderModuleList;
 
@@ -59,7 +59,7 @@ typedef HMODULE (WINAPI* pLoadLibraryW)(
 	_In_ LPCWSTR lpLibFileName
 );
 
-HMODULE myLoadLibrary(LPCWSTR moduleName) {
+auto myLoadLibrary(LPCWSTR moduleName) -> HMODULE {
 	static pLoadLibraryW LoadLibraryWRoutine;
 	if (!LoadLibraryWRoutine) {
 		LoadLibraryWRoutine = (pLoadLibraryW)GetProcAddressbyHASH(Kn32, LoadLibraryW_Hashed);
@@ -93,7 +93,7 @@ FunctionStruct NtSetInformationProcessStruct = { 0 };
 FunctionStruct NtCloseStruct = { 0 };
 FunctionStruct NtAdjustPrivilegesTokenStruct = { 0 };
 
-void initAllFunc() {
+auto initAllFunc() -> void {
 	NtAllocateVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtAllocateVirtualMemory_Hashed);
 	NtAllocateVirtualMemoryStruct.funcHash = NtAllocateVirtualMemory_Hashed;
 	NtProtectVirtualMemoryStruct.funcAddr = GetProcAddressbyHASH(Ntd1l, NtProtectVirtualMemory_Hashed);

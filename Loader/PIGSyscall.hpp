@@ -27,17 +27,17 @@ namespace pigsyscall {
 
 		static inline SyscallMap syscall_map;
 
-		static void ExtractSSNs() noexcept;
+		static auto ExtractSSNs() noexcept -> void;
 
 		// Private constructor
 		syscall() noexcept {
 			ExtractSSNs();
 		};
 
-		uintptr_t FindSyscallOffset() noexcept;
+		auto FindSyscallOffset() noexcept -> uintptr_t;
 
 		template<typename Ret,typename... ServiceArgs>
-		Ret InternalCaller(uint32_t syscall_no, uintptr_t stub_addr, ServiceArgs... args) noexcept {
+		auto InternalCaller(uint32_t syscall_no, uintptr_t stub_addr, ServiceArgs... args) noexcept -> Ret {
 			using StubDef = Ret(__stdcall*)(uint32_t, ServiceArgs...);
 			StubDef stub = reinterpret_cast<decltype(stub)>(stub_addr);
 			//decrypt stub
@@ -60,15 +60,15 @@ namespace pigsyscall {
 
 		// Singleton instance getter
 		// 单例模式构造
-		static inline syscall& get_instance() noexcept {
+		static inline auto get_instance() noexcept -> syscall& {
 			static syscall instance{};
 			return instance;
 		}
 
-		[[nodiscard]] uint32_t GetSyscallNumber(uint32_t stub_name_hashed);
+		[[nodiscard]] auto GetSyscallNumber(uint32_t stub_name_hashed) -> uint32_t;
 
 		template<typename Ret,typename... ServiceArgs>
-		Ret CallSyscall(uint32_t stub_name_hashed, ServiceArgs... args) {
+		auto CallSyscall(uint32_t stub_name_hashed, ServiceArgs... args) -> Ret {
 			uint32_t syscall_no;
 			uintptr_t syscall_inst_addr;
 

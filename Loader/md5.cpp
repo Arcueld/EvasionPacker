@@ -5,7 +5,7 @@ MD5::MD5() {
     MD5::init();
 }
 
-std::string MD5::calculate(const std::string& input) {
+auto MD5::calculate(const std::string& input) -> std::string {
     MD5::init();
     MD5::update((const unsigned char*)input.c_str(), input.length());
     MD5::finalize();
@@ -18,14 +18,9 @@ std::string MD5::calculate(const std::string& input) {
     return ss.str();
 }
 
+         
 
-unsigned int state[4];    // 状态(ABCD)
-unsigned int count[2];    // 位数计数器
-unsigned char buffer[64]; // 输入缓冲区
-unsigned char digest[16]; // 消息摘要
-bool finalized;           // 是否已完成计算
-
-void MD5::init() {
+auto MD5::init() -> void {
     finalized = false;
     count[0] = count[1] = 0;
 
@@ -35,7 +30,7 @@ void MD5::init() {
     state[3] = 0x10325476;
 }
 
-void MD5::update(const unsigned char* input, size_t length) {
+auto MD5::update(const unsigned char* input, size_t length) -> void {
     unsigned int index = count[0] / 8 % 64;
 
     if ((count[0] += (length << 3)) < (length << 3))
@@ -59,7 +54,7 @@ void MD5::update(const unsigned char* input, size_t length) {
     memcpy(&buffer[index], &input[i], length - i);
 }
 
-void MD5::finalize() {
+auto MD5::finalize() -> void {
     if (finalized)
         return;
 
@@ -84,7 +79,7 @@ void MD5::finalize() {
     finalized = true;
 }
 
-void MD5::transform(const unsigned char block[64]) {
+auto MD5::transform(const unsigned char block[64]) -> void {
     unsigned int a = state[0], b = state[1], c = state[2], d = state[3], x[16];
 
     MD5::decode(x, block, 64);
@@ -165,7 +160,7 @@ void MD5::transform(const unsigned char block[64]) {
     memset(x, 0, sizeof(x));
 }
 
-void MD5::encode(unsigned char* output, const unsigned int* input, size_t len) {
+auto MD5::encode(unsigned char* output, const unsigned int* input, size_t len) -> void {
     for (size_t i = 0, j = 0; j < len; i++, j += 4) {
         output[j] = (unsigned char)(input[i] & 0xff);
         output[j + 1] = (unsigned char)((input[i] >> 8) & 0xff);
@@ -174,7 +169,7 @@ void MD5::encode(unsigned char* output, const unsigned int* input, size_t len) {
     }
 }
 
-void MD5::decode(unsigned int* output, const unsigned char* input, size_t len) {
+auto MD5::decode(unsigned int* output, const unsigned char* input, size_t len) -> void {
     for (size_t i = 0, j = 0; j < len; i++, j += 4)
         output[i] = ((unsigned int)input[j]) | (((unsigned int)input[j + 1]) << 8) |
         (((unsigned int)input[j + 2]) << 16) | (((unsigned int)input[j + 3]) << 24);

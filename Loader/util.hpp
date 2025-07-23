@@ -10,7 +10,7 @@
 
 namespace pigsyscall::utils {
 	template<typename... FormatArgs>
-	std::string FormatString(std::string_view string_template, FormatArgs... format_args) {
+	auto FormatString(std::string_view string_template, FormatArgs... format_args) -> std::string {
 		const size_t string_size = snprintf(nullptr, 0, string_template.data(), std::forward<FormatArgs>(format_args)...);
 		if (string_size <= 0) {
 			throw std::runtime_error("[pigsyscall::utils::FormatString] Formatted string size is negative or 0.");
@@ -127,8 +127,8 @@ namespace pigsyscall::utils {
 #define mpbbS   (mpbbCrypt + 256)
 #define mpbbI   (mpbbCrypt + 512)
 
-	//´ÓExchange ÓÊ¼þ±àÂëÄÃ³öÀ´µÄ£¬¸ÕºÃ¿ÉÒÔ¼òµ¥±àÂëÒ»ÏÂstub
-	inline void CryptPermute(PVOID pv, int cb, BOOL fEncrypt)
+	//ï¿½ï¿½Exchange ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã³ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ÕºÃ¿ï¿½ï¿½Ô¼òµ¥±ï¿½ï¿½ï¿½Ò»ï¿½ï¿½stub
+	inline auto CryptPermute(PVOID pv, int cb, BOOL fEncrypt) -> void
 	{
 		byte* pb = (byte*)pv;
 		byte* pbTable = fEncrypt ? mpbbR : mpbbI;
@@ -185,7 +185,7 @@ namespace pigsyscall::utils {
 	}
 
 	// https://github.com/vxunderground/VX-API/blob/main/VX-API/StringLength.cpp
-	inline SIZE_T _StrlenA(LPCSTR String) {
+	inline auto _StrlenA(LPCSTR String) -> SIZE_T {
 		LPCSTR String2;
 
 		for (String2 = String; *String2; ++String2);
@@ -193,7 +193,7 @@ namespace pigsyscall::utils {
 		return (String2 - String);
 	}
 
-	inline SIZE_T _StrlenW(LPCWSTR String) {
+	inline auto _StrlenW(LPCWSTR String) -> SIZE_T {
 		LPCWSTR String2;
 
 		for (String2 = String; *String2; ++String2);
@@ -202,7 +202,7 @@ namespace pigsyscall::utils {
 	}
 
 	// https://github.com/rad9800/WTSRM/blob/master/WTSRM/entry.cpp#L500
-	inline PVOID _memcpy(void* dst, const void* src, SIZE_T count) {
+	inline auto _memcpy(void* dst, const void* src, SIZE_T count) -> PVOID {
 		for (volatile int i = 0; i < count; i++) {
 			((BYTE*)dst)[i] = ((BYTE*)src)[i];
 		}
@@ -210,7 +210,7 @@ namespace pigsyscall::utils {
 	}
 
 	// https://github.com/Cracked5pider/KaynLdr/blob/main/KaynLdr/src/Win32.c#L39
-	inline UINT32 _CopyDotStr(PCHAR String) {
+	inline auto _CopyDotStr(PCHAR String) -> UINT32 {
 		for (UINT32 i = 0; i < _StrlenA(String); i++)
 		{
 			if (String[i] == '.')
@@ -219,8 +219,7 @@ namespace pigsyscall::utils {
 	}
 
 	// https://github.com/vxunderground/VX-API/blob/main/VX-API/CharStringToWCharString.cpp
-
-	inline SIZE_T _CharToWchar(PWCHAR Destination, PCHAR Source, SIZE_T MaximumAllowed) {
+	inline auto _CharToWchar(PWCHAR Destination, PCHAR Source, SIZE_T MaximumAllowed) -> SIZE_T {
 		INT Length = (INT)MaximumAllowed;
 
 		while (--Length >= 0) {
@@ -231,7 +230,7 @@ namespace pigsyscall::utils {
 		return MaximumAllowed - Length;
 	}
 
-	inline CHAR _ToUpper(CHAR c) {
+	inline auto _ToUpper(CHAR c) -> CHAR {
 		if (c >= 'a' && c <= 'z') {
 			return c - 'a' + 'A';
 		}
@@ -240,7 +239,7 @@ namespace pigsyscall::utils {
 	}
 
 	// https://github.com/vxunderground/VX-API/blob/main/VX-API/HashStringRotr32.cpp
-	inline UINT32 _HashStringRotr32SubA(UINT32 Value, UINT Count) {
+	inline auto _HashStringRotr32SubA(UINT32 Value, UINT Count) -> UINT32 {
 		DWORD Mask = (CHAR_BIT * sizeof(Value) - 1);
 		Count &= Mask;
 #pragma warning( push )
@@ -249,9 +248,9 @@ namespace pigsyscall::utils {
 #pragma warning( pop )
 	}
 
-	//ÄÃÀ´µÄHashËã·¨
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Hashï¿½ã·¨
 	//String HASH
-	inline DWORD _HashStringRotr32A(PCHAR String) {
+	inline auto _HashStringRotr32A(PCHAR String) -> DWORD {
 		DWORD Value = 0;
 
 		for (INT Index = 0; Index < _StrlenA(String); Index++)

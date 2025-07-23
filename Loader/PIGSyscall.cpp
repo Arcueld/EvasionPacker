@@ -2,7 +2,7 @@
 #include "util.hpp"
 #include "Tools.h"
 // #include <iostream>
-// #include <iomanip>  // ÓÃÓÚ std::hex, std::setw, std::setfill
+// #include <iomanip>  // ï¿½ï¿½ï¿½ï¿½ std::hex, std::setw, std::setfill
 
 //stub in .text section
 #define ALLOC_ON_CODE \
@@ -29,27 +29,27 @@ ALLOC_ON_CODE unsigned char encrypted_manual_syscall_stub[] = {
 	0x48, 0xc9, 0xb0, 0x33, 0x07, 0x4f, 0x37, 0xf4, 0x5d, 0x21, 0x07, 0x4f, 0xff, 0xf4, 0x1d
 };
 
-// ³äµ±Ò»¸ö trampoline µ½ÁíÒ»¸öÏµÍ³µ÷ÓÃ
+// ï¿½äµ±Ò»ï¿½ï¿½ trampoline ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½
 //ALLOC_ON_CODE unsigned char masked_syscall_stub[] = {
-//    0x41, 0x55,                                          // push r13          //ÈëÕ»
-//    0x41, 0x56,                                          // push r14          //ÈëÕ»
-//    0x49, 0x89, 0xD6,                                    // mov r14, rdx      //µÚ¶þ¸ö²ÎÊý ÊÇsyscallÖ¸ÁîµØÖ·
-//    0x49, 0x89, 0xCD,                                    // mov r13, rcx      //µÚÒ»¸ö²ÎÊý ÊÇSSN
-//    0x4C, 0x89, 0xC1,                                    // mov rcx, r8       //ÕæÕýµÄµÚ1¸ö²ÎÊý
-//    0x4C, 0x89, 0xCA,                                    // mov rdx, r9       //ÕæÕýµÄµÚ2¸ö²ÎÊý
-//    0x4C, 0x8B, 0x44, 0x24, 0x38,                        // mov r8, [rsp+38h]   //ÕæÕýµÄµÚ3¸ö²ÎÊý
-//    0x4C, 0x8B, 0x4C, 0x24, 0x40,                        // mov r9, [rsp+40h]   //ÕæÕýµÄµÚ4¸ö²ÎÊý
-//    0x48, 0x83, 0xC4, 0x28,                              // add rsp, 28h        //Õ»¶¥Ö¸ÕëÏòÏÂÒÆ¶¯ ¶ÑÕ»Æ½ºâ
+//    0x41, 0x55,                                          // push r13          //ï¿½ï¿½Õ»
+//    0x41, 0x56,                                          // push r14          //ï¿½ï¿½Õ»
+//    0x49, 0x89, 0xD6,                                    // mov r14, rdx      //ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½syscallÖ¸ï¿½ï¿½ï¿½Ö·
+//    0x49, 0x89, 0xCD,                                    // mov r13, rcx      //ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½SSN
+//    0x4C, 0x89, 0xC1,                                    // mov rcx, r8       //ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//    0x4C, 0x89, 0xCA,                                    // mov rdx, r9       //ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//    0x4C, 0x8B, 0x44, 0x24, 0x38,                        // mov r8, [rsp+38h]   //ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//    0x4C, 0x8B, 0x4C, 0x24, 0x40,                        // mov r9, [rsp+40h]   //ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½4ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//    0x48, 0x83, 0xC4, 0x28,                              // add rsp, 28h        //Õ»ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ ï¿½ï¿½Õ»Æ½ï¿½ï¿½
 //    0x4C, 0x8D, 0x1D, 0x0C, 0x00, 0x00, 0x00,            // lea r11, [rip+0x0C] ----
-//    0x41, 0xFF, 0xD3,                                    // call r11               |  //µ÷ÓÃ
-//    0x48, 0x83, 0xEC, 0x28,                              // sub rsp, 28h           |  //Õ»¶¥Ö¸ÕëÏòÉÏÒÆ¶¯ ¶ÑÕ»Æ½ºâ
+//    0x41, 0xFF, 0xD3,                                    // call r11               |  //ï¿½ï¿½ï¿½ï¿½
+//    0x48, 0x83, 0xEC, 0x28,                              // sub rsp, 28h           |  //Õ»ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ ï¿½ï¿½Õ»Æ½ï¿½ï¿½
 //    0x41, 0x5E,                                          // pop r14                |  //
-//    0x41, 0x5D,                                          // pop r13                |  //»¹Ô­ÉÏÏÂÎÄ
+//    0x41, 0x5D,                                          // pop r13                |  //ï¿½ï¿½Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //    0xC3,                                                // ret                    |
 //                                                                                   |
 //    0x4C, 0x89, 0xE8,                                    // mov rax, r13      <----   //SSN
 //    0x49, 0x89, 0xCA,                                    // mov r10, rcx              //
-//    0x41, 0xFF, 0xE6                                     // jmp r14                   //jmpµ½syscallÖ¸Áî½øÈëx64¿ìËÙÏµÍ³µ÷ÓÃ
+//    0x41, 0xFF, 0xE6                                     // jmp r14                   //jmpï¿½ï¿½syscallÖ¸ï¿½ï¿½ï¿½ï¿½ï¿½x64ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½
 //};
 
 ALLOC_ON_CODE unsigned char encrypted_masked_syscall_stub[] = {
@@ -76,7 +76,7 @@ ALLOC_ON_CODE unsigned char WorkCallback_stub[] = {
 };
 
 //MDSec get SSN and save to map
-void pigsyscall::syscall::ExtractSSNs() noexcept {
+auto pigsyscall::syscall::ExtractSSNs() noexcept -> void {
 	const auto peb = reinterpret_cast<native::PEB*>(__readgsqword(0x60));
 	const auto ntdll_ldr_entry = reinterpret_cast<native::LdrDataEntry*>(peb->Ldr->InLoadOrderModuleList.Flink->Flink);
 	const auto ntdll_base = reinterpret_cast<uintptr_t>(ntdll_ldr_entry->DllBase);
@@ -117,7 +117,7 @@ void pigsyscall::syscall::ExtractSSNs() noexcept {
 	}
 }
 
-uintptr_t pigsyscall::syscall::FindSyscallOffset() noexcept {
+auto pigsyscall::syscall::FindSyscallOffset() noexcept -> uintptr_t {
 	INT64 offset = 0;
 	BYTE syscall_signature[] = { (BYTE)0x0F, (BYTE)0x05, (BYTE)0xC3 };
 
@@ -150,7 +150,7 @@ uintptr_t pigsyscall::syscall::FindSyscallOffset() noexcept {
 };
 
 //get SSN from map
-[[nodiscard]] uint32_t pigsyscall::syscall::GetSyscallNumber(uint32_t function_name_hashed) {
+[[nodiscard]] auto pigsyscall::syscall::GetSyscallNumber(uint32_t function_name_hashed) -> uint32_t {
 	const auto syscall_entry = syscall_map.find(function_name_hashed);
 
 	if (syscall_entry == syscall_map.end()) {

@@ -20,7 +20,7 @@ static PPEB peb = (PPEB)__readgsqword(0x60);
 
 namespace utils {
 	template<typename... FormatArgs>
-	std::string FormatString(std::string_view string_template, FormatArgs... format_args) {
+	auto FormatString(std::string_view string_template, FormatArgs... format_args) -> std::string {
 		const size_t string_size = snprintf(nullptr, 0, string_template.data(), std::forward<FormatArgs>(format_args)...);
 		if (string_size <= 0) {
 			throw std::runtime_error("[pigsyscall::utils::FormatString] Formatted string size is negative or 0.");
@@ -137,7 +137,7 @@ namespace utils {
 #define mpbbS   (mpbbCrypt + 256)
 #define mpbbI   (mpbbCrypt + 512)
 
-	inline void CryptPermute(PVOID pv, int cb, BOOL fEncrypt)
+	inline auto CryptPermute(PVOID pv, int cb, BOOL fEncrypt) -> void
 	{
 		byte* pb = (byte*)pv;
 		byte* pbTable = fEncrypt ? mpbbR : mpbbI;
@@ -194,7 +194,7 @@ namespace utils {
 	}
 
 	// https://github.com/vxunderground/VX-API/blob/main/VX-API/StringLength.cpp
-	inline SIZE_T _StrlenA(LPCSTR String) {
+	inline auto _StrlenA(LPCSTR String) -> SIZE_T {
 		LPCSTR String2;
 
 		for (String2 = String; *String2; ++String2);
@@ -202,7 +202,7 @@ namespace utils {
 		return (String2 - String);
 	}
 
-	inline SIZE_T _StrlenW(LPCWSTR String) {
+	inline auto _StrlenW(LPCWSTR String) -> SIZE_T {
 		LPCWSTR String2;
 
 		for (String2 = String; *String2; ++String2);
@@ -211,7 +211,7 @@ namespace utils {
 	}
 
 	// https://github.com/rad9800/WTSRM/blob/master/WTSRM/entry.cpp#L500
-	inline PVOID _memcpy(void* dst, const void* src, SIZE_T count) {
+	inline auto _memcpy(void* dst, const void* src, SIZE_T count) -> PVOID {
 		for (volatile int i = 0; i < count; i++) {
 			((BYTE*)dst)[i] = ((BYTE*)src)[i];
 		}
@@ -219,7 +219,7 @@ namespace utils {
 	}
 
 	// https://github.com/Cracked5pider/KaynLdr/blob/main/KaynLdr/src/Win32.c#L39
-	inline UINT32 _CopyDotStr(PCHAR String) {
+	inline auto _CopyDotStr(PCHAR String) -> UINT32 {
 		for (UINT32 i = 0; i < _StrlenA(String); i++)
 		{
 			if (String[i] == '.')
@@ -229,7 +229,7 @@ namespace utils {
 
 	// https://github.com/vxunderground/VX-API/blob/main/VX-API/CharStringToWCharString.cpp
 
-	inline SIZE_T _CharToWchar(PWCHAR Destination, PCHAR Source, SIZE_T MaximumAllowed) {
+	inline auto _CharToWchar(PWCHAR Destination, PCHAR Source, SIZE_T MaximumAllowed) -> SIZE_T {
 		INT Length = (INT)MaximumAllowed;
 
 		while (--Length >= 0) {
@@ -240,7 +240,7 @@ namespace utils {
 		return MaximumAllowed - Length;
 	}
 
-	inline CHAR _ToUpper(CHAR c) {
+	inline auto _ToUpper(CHAR c) -> CHAR {
 		if (c >= 'a' && c <= 'z') {
 			return c - 'a' + 'A';
 		}
@@ -261,7 +261,7 @@ namespace utils {
 
 	inline DWORD _HashStringRotr32A(PCHAR String) {
 		DWORD Value = 0;
-
+		
 		for (INT Index = 0; Index < _StrlenA(String); Index++)
 			Value = String[Index] + _HashStringRotr32SubA(Value, SEED);
 
@@ -269,9 +269,9 @@ namespace utils {
 	}
 }//end namespase
 
-LPVOID GetProcAddressbyHASH(HMODULE hModule, DWORD funcHash);
-HMODULE GetMoudlebyName(WCHAR* target);
-HMODULE myLoadLibrary(LPCWSTR moduleName);
+auto GetProcAddressbyHASH(HMODULE hModule, DWORD funcHash) -> LPVOID;
+auto GetMoudlebyName(WCHAR* target) -> HMODULE;
+auto myLoadLibrary(LPCWSTR moduleName) -> HMODULE;
 
 static auto& syscall = pigsyscall::syscall::get_instance();
 
@@ -326,7 +326,7 @@ EXTERN_C FunctionStruct NtQueryInformationTokenStruct;
 EXTERN_C FunctionStruct NtSetInformationProcessStruct;
 EXTERN_C FunctionStruct NtCloseStruct;
 EXTERN_C FunctionStruct NtAdjustPrivilegesTokenStruct;
-void initAllFunc();
+auto initAllFunc() -> void;
 
 
 

